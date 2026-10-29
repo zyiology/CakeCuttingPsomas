@@ -11,6 +11,7 @@ Refer to appropriate documentation as required.
 ## AI-only rules
 
 - When asked to plan work, create a detailed implementation plan and wait for user review before making code changes.
+- After implementing a plan and ensuring it's correct, make a git commit of the changes for version tracking purposes.
 - If requirements are unclear or missing, ask targeted questions before making assumptions.
 - Apply independent software engineering judgement and optimize for long-term code quality. If a request conflicts with good software engineering principles (clarity, maintainability, correctness, performance, security), push back respectfully, explain the tradeoffs, and recommend a better approach. 
 - Python tooling is managed with `uv`. Run Python, scripts, and project tools through `uv run`.
