@@ -64,6 +64,9 @@ needed to establish the unconditional target.
   for the distinguished agent over the reassigned distinguished bundle.
 - `CakeCuttingPsomas/DominateProgress.lean`: inheritance of dominations after
   shrinking, strict domination-count progress, and the `n²` bound on the total.
+- `CakeCuttingPsomas/DominateShrinking.lean`: recorded shrinking loop, preservation
+  of bundle advantages and containments, geometric contraction, logarithmic
+  stopping bound, and integration with domination-count progress.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -270,11 +273,22 @@ dominations transfer through `σ`; every domination count is nondecreasing,
 and the distinguished count and their sum increase by at least one.
 `Allocation.dominatedAgents`, `dominationCount`, and `totalDominationCount`
 include self-indices exactly when the paper's domination inequality holds.
-`totalDominationCount_le_sq` bounds the total by `n²`. Constructing the shrinking
-loop and establishing its extension hypotheses and iteration bound remain open.
+`totalDominationCount_le_sq` bounds the total by `n²`.
 
-The next Section 3 milestones are termination, query
-accounting, and construction of the protocol from the recorded-value searches.
+`DominateShrinking.run` implements the inner shrinking loop with bounded fuel,
+using recorded residue values for its stopping checks. Conditional on
+`CoreProtocol.Correct`, `run_correct` proves envy-freeness, preservation of all
+bundle advantages and bundle containments, inherited records, and contraction
+by `(1 - 1/n)^k` in the actual number `k` of Core calls. `shrink_correct` proves
+the stopping threshold within `⌈n log(1/α)⌉₊` calls and at most that many times
+`coreQueryBound n` queries. These results allow empty and zero-valued residues.
+`budget_scale_le` supplies the paper's uniform bound
+`⌈n(n+1) log(4n²)⌉₊`. `Spec.shrinking_progress` starts from Repair's output and
+supplies all extension hypotheses of `progress_after_shrinking`, proving strict
+domination-count progress for the resulting legal execution.
+
+The next Section 3 milestones are termination of the outer Dominate loop, total
+query accounting, and construction of its recorded-value searches.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,
 and `Dominate`, with their correctness proofs.
 Proving the `DominateProtocol.Correct` contract will discharge the hypothesis
