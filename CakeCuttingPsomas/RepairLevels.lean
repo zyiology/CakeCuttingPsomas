@@ -29,6 +29,8 @@ private theorem piece_eq {P Q : Piece} (h : P.intervals = Q.intervals) : P = Q :
 /-- The selected paper cells, indexed by original agent and zero-based round.
 These are pieces of the old residue, disjoint across all picks. -/
 structure Picks {n : ℕ} {C : Piece} (D : Allocation n C) where
+  old : Fin n → Piece := D.bundle
+  old_support : ∀ i, (old i).support = (D.bundle i).support := by intro i; rfl
   cell : Fin n → Fin (n - 1) → Piece
   disjoint : ∀ i r j q, (i, r) ≠ (j, q) →
     Disjoint (cell i r).support (cell j q).support
@@ -81,19 +83,20 @@ theorem added_subset (i : Fin n) (k : ℕ) : (p.added i k).support ⊆ D.residue
 
 /-- The trailing cells followed by the old bundle. At `k = 0` this is `Pᵢ`. -/
 def tail (i : Fin n) (k : ℕ) : Piece :=
-  (p.added i k).append (D.bundle i)
-    ((D.disjoint_bundle_residue i).mono_right (p.added_subset i k)).symm
+  (p.added i k).append (p.old i)
+    (by rw [p.old_support]; exact ((D.disjoint_bundle_residue i).mono_right
+      (p.added_subset i k)).symm)
 
 def input (i : Fin n) : Piece := p.tail i 0
 
 theorem tail_support (i : Fin n) (k : ℕ) :
     (p.tail i k).support = (D.bundle i).support ∪
       ⋃ r : Fin (n - 1), ⋃ (_ : k ≤ r.val), (p.cell i r).support := by
-  rw [tail, Piece.support_append, added_support, Set.union_comm]
+  rw [tail, Piece.support_append, p.old_support, added_support, Set.union_comm]
 
 theorem input_intervals (i : Fin n) :
     (p.input i).intervals =
-      (List.ofFn (fun r ↦ (p.cell i r).intervals)).flatten ++ (D.bundle i).intervals := by
+      (List.ofFn (fun r ↦ (p.cell i r).intervals)).flatten ++ (p.old i).intervals := by
   simp [input, tail, Piece.append, added_intervals, roundList, List.flatMap,
     List.map_ofFn]
 
@@ -125,7 +128,7 @@ theorem input_represents {s : RecordedState n}
   have ha : s.Represents (p.added i 0).support :=
     RepairRoundRobin.join_represents s (p.cell i)
       (fun r q h ↦ p.disjoint i r i q (by simpa using h)) (hc i) _ _
-  rw [input, tail, Piece.support_append]
+  rw [input, tail, Piece.support_append, p.old_support]
   exact ha.union (hD i) ((D.disjoint_bundle_residue i).mono_right (p.added_subset i 0)).symm
 
 /-- The cake passed to Permute consists of the selected cells and old bundles.
@@ -172,8 +175,8 @@ private theorem tail_boundary (i : Fin n) (k : ℕ) :
     exact List.disjoint_left.mp (List.disjoint_take_drop roundList_nodup (le_refl k)) hr this
   have he : p.input i = A.piece.append (p.tail i k) hdis := by
     have hi : (p.input i).intervals = (A.piece.append (p.tail i k) hdis).intervals := by
-      change ((p.added i 0).intervals ++ (D.bundle i).intervals) =
-        A.piece.intervals ++ ((p.added i k).intervals ++ (D.bundle i).intervals)
+      change ((p.added i 0).intervals ++ (p.old i).intervals) =
+        A.piece.intervals ++ ((p.added i k).intervals ++ (p.old i).intervals)
       rw [p.added_intervals, p.added_intervals, A.intervals_eq, ← List.append_assoc,
         ← List.flatMap_append, List.take_append_drop]
       rfl
@@ -325,10 +328,12 @@ theorem tail_value (i : Fin n) (k : ℕ) (v : Valuation) :
       ⋃ r ∈ univ.filter (fun r : Fin (n - 1) ↦ k ≤ r.val), (p.cell i r).support := by
     rw [added_support]
     simp only [mem_filter, mem_univ, true_and]
+  rw [← p.old_support i]
   rw [tail, Piece.support_append, v.value_union (p.added i k).measurableSet_support
-    (D.bundle i).measurableSet_support (p.added i k).support_subset_unit
-    (D.bundle i).support_subset_unit
-    ((D.disjoint_bundle_residue i).mono_right (p.added_subset i k)).symm,
+    (p.old i).measurableSet_support (p.added i k).support_subset_unit
+    (p.old i).support_subset_unit
+    (by rw [p.old_support]; exact
+      ((D.disjoint_bundle_residue i).mono_right (p.added_subset i k)).symm),
     he, RepairRoundRobin.value_cells (p.cell i)
       (fun r q h ↦ p.disjoint i r i q (by simpa using h))]
   exact add_comm _ _
@@ -559,26 +564,28 @@ def ofRoundRobin {m : ℕ} (s : RecordedState n) (cells : Fin m → Piece)
     (hn : 0 < n) (d : Fin m) (hcap : n * (n - 1) ≤ m)
     (hd : ∀ a b, a ≠ b → Disjoint (cells a).support (cells b).support)
     (hsub : ∀ c, (cells c).support ⊆ D.residue) : Picks D where
-  cell i r := cells (RepairRoundRobin.chosen s cells hn d r i)
-  disjoint i r j q h := RepairRoundRobin.chosen_disjoint s cells hn d hcap hd
-    (r, i) (q, j) (by
-      intro he
-      apply h
-      exact Prod.ext (congrArg Prod.snd he) (congrArg Prod.fst he))
-  subset_residue i r := hsub _
+  old i := s.alignSupport (D.bundle i)
+  old_support i := s.support_alignSupport _
+  cell i r := s.alignSupport (cells (RepairRoundRobin.chosen s cells hn d r i))
+  disjoint i r j q h := by
+    simp only [RecordedState.support_alignSupport]
+    exact RepairRoundRobin.chosen_disjoint s cells hn d hcap hd
+      (r, i) (q, j) (by
+        intro he
+        apply h
+        exact Prod.ext (congrArg Prod.snd he) (congrArg Prod.fst he))
+  subset_residue i r := by simpa only [RecordedState.support_alignSupport] using hsub _
 
-/-- The construction uses the existing ordered chosen bundle without changing
-the order of either its cells or their component intervals. -/
+/-- Section 4, `rep:pieces`: alignment preserves the selected cake and pick order. -/
 theorem ofRoundRobin_added {m : ℕ} (s : RecordedState n) (cells : Fin m → Piece)
     (hn : 0 < n) (d : Fin m) (hcap : n * (n - 1) ≤ m)
     (hd : ∀ a b, a ≠ b → Disjoint (cells a).support (cells b).support)
     (hsub : ∀ c, (cells c).support ⊆ D.residue) (i : Fin n) :
-    (ofRoundRobin s cells hn d hcap hd hsub).added i 0 =
-      RepairRoundRobin.bundle s cells hn d hcap hd i := by
-  apply piece_eq
-  rw [Picks.added_intervals, RepairRoundRobin.bundle_intervals]
-  simp only [Picks.roundList, List.drop_zero, List.flatMap, List.map_ofFn,
-    Function.comp_def, id_eq, ofRoundRobin]
+    ((ofRoundRobin s cells hn d hcap hd hsub).added i 0).support =
+      (RepairRoundRobin.bundle s cells hn d hcap hd i).support := by
+  rw [Picks.added_support, RepairRoundRobin.bundle_support]
+  simp only [ofRoundRobin, RecordedState.support_alignSupport]
+  simp
 
 /-- Section 4, `lem:repair main`: the proved recorded round robin supplies all
 the hypotheses of the levels argument. The old bundle labelled `i` is held by
@@ -609,8 +616,9 @@ theorem roundRobin_old_bundle_subset {m : ℕ} (hn : 2 ≤ n)
     intro i r
     have hh := g.pick_strict r i
     rw [hR] at hh
-    exact (mul_pos hε (hpos i)).trans hh
-  apply p.old_bundle_subset hn W π v ε hS ?_ ?_ g.comparison ?_ hEF hwhole hindiff
+    simpa only [p, ofRoundRobin, RecordedState.support_alignSupport] using
+      (mul_pos hε (hpos i)).trans hh
+  apply p.old_bundle_subset hn W π v ε hS ?_ ?_ ?_ ?_ hEF hwhole hindiff
   · intro i r
     by_contra he
     have he' : (p.cell i r).support = ∅ := Set.not_nonempty_iff_eq_empty.mp he
@@ -620,8 +628,9 @@ theorem roundRobin_old_bundle_subset {m : ℕ} (hn : 2 ≤ n)
   · intro i j
     have := halmost i j
     linarith
+  · simpa only [p, ofRoundRobin, RecordedState.support_alignSupport] using g.comparison
   · intro i
-    simpa only [p, ofRoundRobin, hR] using g.last_pick hn i
+    simpa only [p, ofRoundRobin, RecordedState.support_alignSupport, hR] using g.last_pick hn i
 
 /-- Section 4, Algorithm `alg:repair`, line `rep:permute`, and the preservation
 argument in `lem:repair main`: a correct Permute call on the ordered enlarged
@@ -629,8 +638,7 @@ bundles preserves each old bundle under the inverse assignment. -/
 theorem Picks.permute_preserves (p : Picks D) (hn : 2 ≤ n)
     (P : PermuteProtocol) (hP : P.Correct) (s : RecordedState n)
     (v : Fin n → Valuation) (hs : s.Correct v)
-    (hc : ∀ i r, s.Represents (p.cell i r).support)
-    (hD : ∀ i, s.Represents (D.bundle i).support)
+    (hinput : ∀ i, ∃ Q, s.Compatible Q ∧ (p.input i).SameTraversal Q)
     (hne : ∀ i r, (p.cell i r).support.Nonempty) (ε : ℝ)
     (halmost : ∀ i j, (v i).value (D.bundle j).support - ε * (v i).value D.residue ≤
       (v i).value (D.bundle i).support)
@@ -645,7 +653,7 @@ theorem Picks.permute_preserves (p : Picks D) (hn : 2 ≤ n)
       (∀ i, (D.bundle i).support ⊆ (r.allocation.bundle (r.assignment.symm i)).support) ∧
       count ≤ permuteQueryBound n := by
   obtain ⟨r, count, hrun, hrs, hinherits, hEF, hS, hwhole, hindiff, hcost⟩ :=
-    hP n (by omega) s p.cake p.input v hs (p.input_represents hc hD)
+    hP n (by omega) s p.cake p.input v hs hinput
       p.input_disjoint p.cake_support.symm
   refine ⟨r, count, hrun, hrs, hinherits, hEF, hS, ?_, hcost⟩
   apply p.old_bundle_subset hn r.allocation r.assignment v ε hS hne ?_
@@ -669,7 +677,8 @@ theorem roundRobin_permute_preserves {m : ℕ} (hn : 2 ≤ n)
     (halmost : ∀ i j, (v i).value (D.bundle j).support - ε * (v i).value D.residue ≤
       (v i).value (D.bundle i).support)
     (P : PermuteProtocol) (hP : P.Correct) (hs : s.Correct v)
-    (hD : ∀ i, s.Represents (D.bundle i).support) :
+    (hD : ∀ i, s.Represents (D.bundle i).support)
+    (hcells : ∀ c, s.Represents (cells c).support) :
     let p := ofRoundRobin s cells (by omega) d hcap hd hsub
     ∃ (r : PermuteResult n p.cake) (count : ℕ),
       (P n (by omega) s p.cake p.input).Runs v r count ∧ r.state.Correct v ∧
@@ -678,13 +687,16 @@ theorem roundRobin_permute_preserves {m : ℕ} (hn : 2 ≤ n)
       (∀ i, (D.bundle i).support ⊆ (r.allocation.bundle (r.assignment.symm i)).support) ∧
       count ≤ permuteQueryBound n := by
   let p := ofRoundRobin s cells (by omega) d hcap hd hsub
-  have hrep : ∀ i, s.Represents (p.input i).support := by
+  have hrep : ∀ i, ∃ Q, s.Compatible Q ∧ (p.input i).SameTraversal Q := by
     intro i
-    rw [Picks.input, Picks.tail, Piece.support_append]
-    have ha : s.Represents (p.added i 0).support := by
-      rw [ofRoundRobin_added]
-      exact g.bundle_represents i
-    exact ha.union (hD i) ((D.disjoint_bundle_residue i).mono_right (p.added_subset i 0)).symm
+    refine ⟨p.input i, ?_, Piece.SameTraversal.refl _⟩
+    intro J hJ
+    change J ∈ (p.added i 0).intervals ++ (p.old i).intervals at hJ
+    rcases List.mem_append.mp hJ with hJ | hJ
+    · rw [Picks.added_intervals] at hJ
+      obtain ⟨r, _, hJ⟩ := List.mem_flatMap.mp hJ
+      exact s.compatible_alignSupport (hcells _) J hJ
+    · exact s.compatible_alignSupport (hD i) J hJ
   obtain ⟨r, count, hrun, hrs, hinherits, hEF, hS, hwhole, hindiff, hcost⟩ :=
     hP n (by omega) s p.cake p.input v hs hrep p.input_disjoint p.cake_support.symm
   refine ⟨r, count, hrun, hrs, hinherits, hEF, hS, ?_, hcost⟩

@@ -486,25 +486,16 @@ output satisfies the existing exact `IsSuffix` predicate, and the remaining
 traversal has a compatible representation for the next trim. No valuations
 occur in the protocol definition; targets use inherited records.
 
-Before assembling candidates, resolve an input-interface gap: Permute currently
-requires only `s.Represents (pieces j).support`, whereas recorded prefix cuts
-need a compatible representation of the specified traversal. Support alone does
-not imply that requirement: a partition consisting of `[0,1]` represents the
-support of a piece traversing `[1/2,1]` before `[0,1/2)`, but cannot represent
-that traversal with its one cell. `representAlong` therefore cannot be justified
-from `Represents` alone. Core's equal partition currently exports represented
-supports, and Repair's enlarged bundles are also passed using represented
-supports; their ordered alignment must be tracked explicitly. Audit these
-constructions against Section 1.3's recorded-interval convention before proposing
-an interface correction. For Core, expose traversal inheritance through equal
-partitioning and alignment of each returned prefix. For Repair, align the picked
-paper cells and the old bundles before concatenation, preserving the order of
-the picked cells before each old bundle. Repair's external guarantees concern
-old-bundle supports, so a current-cell representation of an old bundle can be
-prepared internally without strengthening Repair's input contract. Prove the
-resulting Permute precondition at both callers without additional queries.
-The Permute contract and its suffix conclusion have not been changed by this
-toolkit; its recorded wrapper states the traversal requirement explicitly.
+Permute's input contract now requires each specified traversal to admit a
+compatible current-cell representation (`SameTraversal`), rather than only
+represented support. `prefixCut_runs_spec` also exposes compatibility of its
+canonical prefix. Equal partitioning inherits traversals, represents remainders
+along their original traversal, and exports aligned outputs for Core's call.
+Repair internally aligns each selected paper cell and old bundle with current
+cells before concatenation, preserving the order of picks before the old bundle.
+Only old-bundle supports are prescribed by Repair's external contract. Both
+callers satisfy Permute's traversal precondition without extra queries or changes
+to Core and Repair's external guarantees.
 
 ## Checking
 

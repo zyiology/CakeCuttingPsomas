@@ -15,16 +15,6 @@ noncomputable section
 
 namespace CakeCuttingPsomas.RecordedState
 
-/-- Traversal inheritance also preserves pieces already represented along an
-earlier traversal, without requiring their original lists to be current cells. -/
-theorem TraversalRefines.preserves_along {n : ℕ} {s s' : RecordedState n}
-    (h : s.TraversalRefines s') {P : Piece}
-    (hP : ∃ Q, s.Compatible Q ∧ P.SameTraversal Q) :
-    ∃ Q, s'.Compatible Q ∧ P.SameTraversal Q := by
-  obtain ⟨Q, hQ, he⟩ := hP
-  obtain ⟨R, hR, he'⟩ := h Q hQ
-  exact ⟨R, hR, he.trans he'⟩
-
 /-- Section 5, `permute:trim`: the target is computed entirely from records.
 The returned position refers to the original piece, even after subdivision. -/
 def capTrim {n : ℕ} (s : RecordedState n) (i : Fin n) (P : Piece) (cap : ℝ) :
@@ -67,7 +57,7 @@ theorem capTrim_runs {n : ℕ} {s : RecordedState n} {v : Fin n → Valuation}
   have hv : s.pieceValue i Q = (v i).value P.support := by
     rw [pieceValue_eq hs hQ, ← he.support_eq]
   have hn := (v i).value_nonneg P.measurableSet_support P.support_subset_unit
-  obtain ⟨a, s', count, hr, hcount, hs', href, ha, hval, hmin, hp, hq⟩ :=
+  obtain ⟨a, s', count, hr, hcount, hs', href, ha, hval, hmin, hp, hq, _hpre⟩ :=
     prefixCut_runs_spec hs i Q hQ (max 0 (s.pieceValue i Q - cap))
       (le_max_left _ _) (by rw [hv, ← he.support_eq]; exact max_le hn (by linarith))
   have haP : a ∈ Set.Icc 0 P.length := he.1.symm ▸ ha

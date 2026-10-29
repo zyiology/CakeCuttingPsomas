@@ -30,7 +30,7 @@ def run {n : ℕ} (c : Fin n) (target : ℝ) :
     (k : ℕ) → RecordedState n → Piece → RWProtocol n (Result n (k + 1))
   | 0, s, C => .done ⟨s, fun _ ↦ C⟩
   | k + 1, s, C => (s.prefixCut c C target).bind fun (x, s') ↦
-      (run c target k s' (s'.represent (C.suffixAt x).support)).map
+      (run c target k s' (s'.representAlong (C.suffixAt x))).map
         (prepend (C.prefixAt x))
 
 /-- Section 4, `core:cut`: exact equal partition, disjointness, inherited records,
@@ -40,15 +40,15 @@ theorem run_correct {n : ℕ} (c : Fin n) (target : ℝ) (k : ℕ)
     (hs : s.Correct v) (hC : s.Compatible C) (ht : 0 ≤ target)
     (hv : (v c).value C.support = (k + 1 : ℕ) * target) :
     ∃ r count, (run c target k s C).Runs v r count ∧ count ≤ k * (n + 1) ∧
-      r.state.Correct v ∧ s.Refines r.state ∧
-      (∀ j, r.state.Represents (r.pieces j).support) ∧
+      r.state.Correct v ∧ s.TraversalRefines r.state ∧
+      (∀ j, ∃ Q, r.state.Compatible Q ∧ (r.pieces j).SameTraversal Q) ∧
       (∀ i j, i ≠ j → Disjoint (r.pieces i).support (r.pieces j).support) ∧
       (⋃ j, (r.pieces j).support) = C.support ∧
       (∀ j, (v c).value (r.pieces j).support = target) := by
   induction k generalizing s C with
   | zero =>
-    refine ⟨⟨s, fun _ ↦ C⟩, 0, .done _, by simp, hs, s.refines_refl,
-      (fun _ ↦ ⟨C, hC, rfl⟩), ?_, ?_, ?_⟩
+    refine ⟨⟨s, fun _ ↦ C⟩, 0, .done _, by simp, hs, s.traversalRefines_refl,
+      (fun _ ↦ ⟨C, hC, Piece.SameTraversal.refl C⟩), ?_, ?_, ?_⟩
     · intro i j hij
       exact (hij (Fin.ext (by omega))).elim
     · ext y
@@ -61,17 +61,18 @@ theorem run_correct {n : ℕ} (c : Fin n) (target : ℝ) (k : ℕ)
       rw [hv]
       have : (1 : ℝ) ≤ (k + 1 + 1 : ℕ) := by exact_mod_cast (by omega : 1 ≤ k + 1 + 1)
       nlinarith
-    obtain ⟨x, s', a, ha, hca, hs', href, _hx, hval, _hmin, hp, hq⟩ :=
-      RecordedState.prefixCut_runs hs c C hC target ht htarget
-    have hrem : (v c).value (s'.represent (C.suffixAt x).support).support =
+    obtain ⟨x, s', a, ha, hca, hs', href, _hx, hval, _hmin, hp, hq, hpre⟩ :=
+      RecordedState.prefixCut_runs_spec hs c C hC target ht htarget
+    have hremaining := s'.representAlong_spec ⟨_, hq, Piece.SameTraversal.refl _⟩
+    have hrem : (v c).value (s'.representAlong (C.suffixAt x)).support =
         (k + 1 : ℕ) * target := by
-      rw [s'.support_represent hq]
+      rw [← hremaining.2.support_eq]
       have hadd := (v c).value_prefix_add_suffix C x
       rw [hval, hv] at hadd
       push_cast at hadd ⊢
       linarith
     obtain ⟨r, b, hb, hcb, hrs, hrr, hrp, hdis, hcover, hvalues⟩ :=
-      ih s' (s'.represent (C.suffixAt x).support) hs' (s'.compatible_represent _) hrem
+      ih s' (s'.representAlong (C.suffixAt x)) hs' hremaining.1 hrem
     refine ⟨prepend (C.prefixAt x) r, a + b, ?_, ?_, hrs, href.trans hrr, ?_, ?_, ?_, ?_⟩
     · exact ha.bind (hb.map (prepend (C.prefixAt x)))
     · calc
@@ -79,11 +80,11 @@ theorem run_correct {n : ℕ} (c : Fin n) (target : ℝ) (k : ℕ)
         _ = (k + 1) * (n + 1) := by ring
     · intro j
       refine Fin.cases ?_ (fun j ↦ hrp j) j
-      exact hrr.represents hp
+      exact hrr.preserves_along ⟨_, hpre, Piece.SameTraversal.refl _⟩
     · have hsub (j : Fin (k + 1)) : (r.pieces j).support ⊆ (C.suffixAt x).support := by
         intro y hy
         have : y ∈ ⋃ j, (r.pieces j).support := Set.mem_iUnion.mpr ⟨j, hy⟩
-        rwa [hcover, s'.support_represent hq] at this
+        rwa [hcover, hremaining.2.support_eq.symm] at this
       intro i
       refine Fin.cases ?_ (fun i ↦ ?_) i
       · intro j
@@ -106,7 +107,7 @@ theorem run_correct {n : ℕ} (c : Fin n) (target : ℝ) (k : ℕ)
         · rintro (h | ⟨j, h⟩)
           · exact ⟨0, h⟩
           · exact ⟨j.succ, h⟩
-      rw [hunion, hcover, s'.support_represent hq]
+      rw [hunion, hcover, hremaining.2.support_eq.symm]
       exact C.prefix_union_suffix x
     · intro j
       exact Fin.cases hval hvalues j

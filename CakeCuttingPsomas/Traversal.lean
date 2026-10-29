@@ -236,6 +236,16 @@ theorem traversalRefines_split {n : ℕ} (s : RecordedState n) (I : CakeInterval
   exact ⟨refinePiece P I x, compatible_split s hP I x hl hr a,
     sameTraversal_refinePiece P I x⟩
 
+/-- Traversal inheritance also preserves pieces already represented along an
+earlier traversal, without requiring their original lists to be current cells. -/
+theorem TraversalRefines.preserves_along {n : ℕ} {s s' : RecordedState n}
+    (h : s.TraversalRefines s') {P : Piece}
+    (hP : ∃ Q, s.Compatible Q ∧ P.SameTraversal Q) :
+    ∃ Q, s'.Compatible Q ∧ P.SameTraversal Q := by
+  obtain ⟨Q, hQ, he⟩ := hP
+  obtain ⟨R, hR, he'⟩ := h Q hQ
+  exact ⟨R, hR, he.trans he'⟩
+
 /-- Select a current representation without changing the specified traversal.
 The fallback makes this internal operation total on arbitrary answer branches. -/
 def representAlong {n : ℕ} (s : RecordedState n) (P : Piece) : Piece :=

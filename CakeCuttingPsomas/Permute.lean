@@ -1,6 +1,7 @@
 module
 
 public import CakeCuttingPsomas.RecordedAllocation
+public import CakeCuttingPsomas.Traversal
 public import Mathlib.Data.Nat.Choose.Basic
 public import Mathlib.Data.Nat.Factorial.Basic
 
@@ -29,12 +30,13 @@ def PermuteProtocol := (n : ℕ) → 0 < n → RecordedState n →
   (C : Piece) → (Fin n → Piece) → RWProtocol n (PermuteResult n C)
 
 /-- Section 4's `lem:permute`, including both additional guarantees (i) and (ii).
-Support equality accommodates subdivision of interval lists by inherited records.
+Input traversals must admit compatible current-cell representations, as required
+by Section 1.3. The suffix conclusion retains the original interval lists.
 Empty pieces, zero values, and unnormalized valuations are allowed. -/
 def PermuteProtocol.Correct (P : PermuteProtocol) : Prop :=
   ∀ (n : ℕ) (hn : 0 < n) (s : RecordedState n) (C : Piece) (pieces : Fin n → Piece)
     (v : Fin n → Valuation), s.Correct v →
-    (∀ j, s.Represents (pieces j).support) →
+    (∀ j, ∃ Q, s.Compatible Q ∧ (pieces j).SameTraversal Q) →
     (∀ i j, i ≠ j → Disjoint (pieces i).support (pieces j).support) →
     (⋃ j, (pieces j).support) = C.support →
     ∃ (r : PermuteResult n C) (count : ℕ),

@@ -75,7 +75,7 @@ theorem protocol_correct (P : PermuteProtocol) (hP : P.Correct) :
   obtain ⟨z, b, hb, hzs, hzi, hef, hsuffix, ⟨whole, hwhole⟩, _hindiff, hcb⟩ :=
     hP (m + 1) (by omega) r.state C r.pieces v hrs hrp hdis hcover
   refine ⟨z.toRecordedAllocationResult, a + b, ?_, hzs,
-    ⟨href.trans hzi.1, hzi.2⟩, hef, ?_, ?_⟩
+    ⟨href.refines.trans hzi.1, hzi.2⟩, hef, ?_, ?_⟩
   · change ((EqualPartition.run c target m s C).bind _).Runs v _ _
     exact ha.bind (hb.map PermuteResult.toRecordedAllocationResult)
   · have hlow : target ≤ (v c).value (z.allocation.bundle c).support := by

@@ -55,6 +55,7 @@ theorem addition_subset (p : Picks D) (r : PermuteResult n p.cake)
   intro x hx
   have h := hsub (r.assignment.symm j) hx.1
   simp only [Equiv.apply_symm_apply, Picks.input, Picks.tail, Piece.support_append] at h
+  rw [p.old_support] at h
   exact h.resolve_right hx.2
 
 /-- Package an intact Permute output with the inverse assignment and a residue
@@ -171,7 +172,7 @@ theorem protocol_correct (P : PermuteProtocol) (hP : P.Correct) :
     fun j ↦ href.refines.represents (hD j)
   obtain ⟨z, b, hb, hzs, hzi, hef, hsuffix, hold, hcb⟩ :=
     roundRobin_permute_preserves hn marks.state (marks.cells R) d hcap hd hsub
-      R hR ε hε v hpos g halmost P hP hms hDm
+      R hR ε hε v hpos g halmost P hP hms hDm hrep
   have hzsub : ∀ i, (z.allocation.bundle i).support ⊆ (p.input (z.assignment i)).support := by
     intro i
     obtain ⟨x, _, heq⟩ := hsuffix i

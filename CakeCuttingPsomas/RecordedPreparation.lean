@@ -44,6 +44,24 @@ theorem support_represent {n : ℕ} {s : RecordedState n} {S : Set ℝ}
       simp only [decide_eq_true_eq]
       exact fun y hy ↦ ⟨I, hI, hy⟩⟩, hx⟩
 
+/-- Choose current cells for a support whose internal traversal is not prescribed.
+Invalid branches retain the input, so its support is always unchanged. -/
+def alignSupport {n : ℕ} (s : RecordedState n) (P : Piece) : Piece :=
+  if s.Represents P.support then s.represent P.support else P
+
+@[simp] theorem support_alignSupport {n : ℕ} (s : RecordedState n) (P : Piece) :
+    (s.alignSupport P).support = P.support := by
+  classical
+  unfold alignSupport
+  split_ifs with h
+  · exact s.support_represent h
+  · rfl
+
+theorem compatible_alignSupport {n : ℕ} {s : RecordedState n} {P : Piece}
+    (h : s.Represents P.support) : s.Compatible (s.alignSupport P) := by
+  classical
+  simpa only [alignSupport, ite_eq_left h] using s.compatible_represent P.support
+
 /-- Read a represented support using only the current cell table. -/
 def supportValue {n : ℕ} (s : RecordedState n) (i : Fin n) (S : Set ℝ) : ℝ :=
   s.pieceValue i (s.represent S)
