@@ -1,6 +1,7 @@
 module
 
 public import CakeCuttingPsomas.DominateShrinking
+public import CakeCuttingPsomas.RecordedPreparation
 public import Mathlib.Logic.Relation
 
 set_option linter.style.header false
@@ -9,7 +10,7 @@ set_option linter.style.header false
 
 Section 3, proof of `lem: dominate` in `paper/main.tex`, paragraphs on increasing
 counts and termination. This is mathematical termination of the completed stages;
-recorded-value searches and the outer query protocol remain separate obligations.
+recorded-value searches and the outer query protocol are in `DominateProtocol`.
 -/
 
 @[expose] public section
@@ -44,7 +45,7 @@ structure PreparedIteration {n : ℕ} {C : Piece} (K : CoreProtocol) (P : Repair
   repair : RepairResult n C
     (DominateChoice.permutedCombined w.allocation core.allocation w.residue_eq permutation)
   repairCount : ℕ
-  repairRuns : (P n (by omega) core.state C
+  repairRuns : (P.onRepresented n (by omega) core.state C
     (DominateChoice.permutedCombined w.allocation core.allocation w.residue_eq permutation)
     (DominateChoice.scale n exponent)).Runs v repair repairCount
   repair_correct : repair.state.Correct v
@@ -241,8 +242,8 @@ theorem Returns.output {n : ℕ} {C : Piece} {K : CoreProtocol}
     (w.appendCore_envyFree_advantage f v hw hef).1, hgroup⟩
 
 /-- Section 3, proof of `lem: dominate`: if an iteration's two branches are
-available, exhausted capacity forces the returning branch. Branch availability
-will be discharged by the later construction of the recorded-value searches. -/
+available, exhausted capacity forces the returning branch. `DominateAssembly.step_correct`
+discharges branch availability using the recorded-value searches. -/
 theorem returns_at_capacity {n : ℕ} {C : Piece} {K : CoreProtocol}
     {P : RepairProtocol} {v : Fin n → Valuation} {w : RecordedAllocationResult n C}
     (hw : remaining v w = 0)

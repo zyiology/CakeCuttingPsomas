@@ -12,3 +12,7 @@ public import CakeCuttingPsomas.DominateRepair
 public import CakeCuttingPsomas.DominateProgress
 public import CakeCuttingPsomas.DominateShrinking
 public import CakeCuttingPsomas.DominateTermination
+public import CakeCuttingPsomas.RecordedPreparation
+public import CakeCuttingPsomas.DominateSearch
+public import CakeCuttingPsomas.DominateCost
+public import CakeCuttingPsomas.DominateProtocol

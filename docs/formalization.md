@@ -12,8 +12,11 @@ This is the initial normalized unit-cake instance of the main theorem in Section
 The unconditional target's proof is a single `sorry` placeholder.
 `exists_bounded_envy_free_protocol_of_dominate` proves the same conclusion from
 an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
-The conditional theorem is proved; a correct `Dominate` implementation is still
-needed to establish the unconditional target.
+Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
+from correct Core and Repair protocols. The resulting
+`exists_bounded_envy_free_protocol_of_core_repair` has the same conclusion and
+query bound. Core and Repair implementations are still needed for the
+unconditional target.
 
 ## Files and definitions
 
@@ -54,6 +57,9 @@ needed to establish the unconditional target.
   correctness specification, including records for the recursive residue.
 - `CakeCuttingPsomas/RecordedAllocation.lean`: shared partial-allocation outputs
   and inherited-record guarantees for Section 3's subroutines.
+- `CakeCuttingPsomas/RecordedPreparation.lean`: current-cell representations and
+  recorded support values, allocation transport, and preparation of Repair inputs
+  after refinement, with unchanged query counts.
 - `CakeCuttingPsomas/Core.lean`: the Core protocol contract and the cutter's
   residue contraction lemma.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
@@ -70,10 +76,16 @@ needed to establish the unconditional target.
 - `CakeCuttingPsomas/DominateTermination.lean`: completed outer-iteration relation,
   preserved loop invariants, well-founded termination, and the `n²` bound on
   non-returning iterations, conditional on branch availability.
+- `CakeCuttingPsomas/DominateSearch.lean`: finite recorded-value searches for a
+  dominated group and the geometric scale, agents, and permutation.
+- `CakeCuttingPsomas/DominateCost.lean`: total Section 3 query accounting,
+  including the final returning Core call, and the explicit Dominate bound.
+- `CakeCuttingPsomas/DominateProtocol.lean`: the assembled outer query protocol,
+  branch availability, and correctness conditional only on Core and Repair.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
-- `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
-  the unproved unconditional `exists_bounded_envy_free_protocol`.
+- `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
+  Dominate or on Core and Repair, and the unproved unconditional target.
 - `CakeCuttingPsomas.lean`: imports the complete development.
 
 `Fin n` represents the agents using indices from zero through `n - 1`.
@@ -249,7 +261,8 @@ strong connectivity of the old non-domination graph using reachable sets,
 the cutter's normalized gap sum and `1/(n-1)` average bound, and the paper's
 two cases. The small-edge case uses finite counting to find an empty geometric
 band and `List.formPerm` to cycle a simple directed path. This is a mathematical
-existence theorem; the search over inherited records is still to be implemented.
+existence theorem; `DominateSearch.choice_available` connects its witnesses to
+the finite search over inherited records.
 
 The Repair call's mathematical preconditions in Section 3's proof of
 `lem: dominate` are proved by `DominateChoice.Spec.repair_preconditions`.
@@ -257,8 +270,9 @@ The Repair call's mathematical preconditions in Section 3's proof of
 using the existing allocation adapters, with exact residue `Y.residue`.
 Envy-freeness of `X` and `Y` and (S2) give almost envy-freeness; the scale's
 exponent lower bound gives `0 < α ≤ (4n²)⁻² < 1/(6n³)`. Positive residue
-values are inherited from the choice lemma. Preparing recorded representations
-and invoking the protocol remain separate construction steps.
+values are inherited from the choice lemma. `RepairProtocol.onRepresented`
+prepares a compatible representation of the ambient cake, invokes Repair, and
+transports its output back to the original cake representation at no query cost.
 
 Section 3's immediate post-Repair advantage is proved by
 `DominateChoice.Spec.postRepair_advantage`: Repair's envy-free output and
@@ -303,21 +317,47 @@ Here `μ` is `totalDominationCount`; its initial value is not assumed to be zero
 The remaining-capacity measure `n² - μ(X)` strictly decreases, yielding
 `wellFounded` and `no_infinite_continuations`. `terminates_of_prepared` proves a
 return within that bound when each reachable iteration can return or prepare
-Core, choice, and Repair. This branch-availability hypothesis remains explicit:
-the recorded-value searches and full outer query protocol are not implemented.
+Core, choice, and Repair. This theorem keeps branch availability explicit;
+`DominateAssembly.step_correct` discharges it in the actual query protocol.
 `reachable_invariants` and `Returns.output` give correct inherited records,
 envy-freeness, and a dominated group for the returning allocation.
 `outer_iteration_bound` allows the final returning iteration, giving at most
 `n² + 1` outer iterations (and initial Core calls), and at most `n²` Repair calls.
 Shrinking Core calls are counted separately.
 
-The next Section 3 milestones are total query accounting and construction of the
-outer protocol and its recorded-value searches.
-The full development still needs implementations of `Permute`, `Core`, `Repair`,
-and `Dominate`, with their correctness proofs.
-Proving the `DominateProtocol.Correct` contract will discharge the hypothesis
-of the conditional main theorem. The asymptotic bound `2^{O(n log n)}` also
-remains to be derived from the explicit bound.
+Section 3's protocol construction is complete conditional on Core and Repair.
+`RecordedState.represent` selects current cells contained in an old support;
+`support_represent` proves exact coverage whenever that support is represented.
+`supportValue_eq` recovers its value from the table. This handles old bundles
+whose interval lists are no longer compatible after refinement. Rebuilding the
+ambient cake for Repair does not change the bundles' traversal orders.
+
+`DominateSearch.group` searches all finite agent subsets and
+`DominateSearch.choice` searches bounded exponents, agent pairs, and permutations.
+Their predicates contain no valuations. Soundness identifies their recorded tests
+with the paper's domination inequality and (S1)--(S3); completeness connects failed
+group tests to `exists_choice`. Both searches are free internal computation.
+
+`DominateAssembly.step_correct` retains actual Core, prepared Repair, and
+shrinking executions in `DominateTermination.Iteration`. The shrinking threshold
+uses the recorded value of the initial Core residue, saved before Repair.
+`run_correct` uses `n² + 1` outer-loop fuel and the existing remaining-capacity
+measure to exclude exhaustion on legal executions. Arbitrary answer branches
+have total fallback behavior; no correctness guarantees are claimed for them.
+`protocol_correct` proves `DominateProtocol.Correct` from `CoreProtocol.Correct`
+and `RepairProtocol.Correct`, without a separate branch-availability assumption.
+
+`DominateCost.totalBudget` counts one final Core call plus at most `n²`
+continuations, each consisting of Core, Repair, and bounded shrinking.
+`totalBudget_le` proves the paper's explicit bound `32^n n^7 (n!)²`, using
+Mathlib's Stirling lower bound and a loose polynomial estimate for the logarithm.
+Repair's real-valued query inequality is bounded by an integer budget without
+adding a rounding cost.
+
+The next work is Section 4's implementations of Core and Repair, reducing them
+to Section 5's Permute protocol. These subroutines and their correctness proofs
+remain necessary for the unconditional theorem. The asymptotic bound
+`2^{O(n log n)}` also remains to be derived from the explicit bound.
 
 ## Checking
 
