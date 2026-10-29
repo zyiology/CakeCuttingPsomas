@@ -2,6 +2,7 @@ module
 
 public import CakeCuttingPsomas.Divide
 public import CakeCuttingPsomas.DominateProtocol
+public import CakeCuttingPsomas.CoreProtocol
 
 -- This project does not prescribe mathlib's copyright/license header format.
 set_option linter.style.header false
@@ -10,7 +11,7 @@ set_option linter.style.header false
 
 The initial, normalized unit-cake instance of the main theorem in Section 2.
 The unconditional proof is intentionally unfinished. The conditional theorems
-construct the paper's `Divide` from Dominate, and Dominate from Core and Repair.
+construct Divide from Dominate, Dominate from Core and Repair, and Core from Permute.
 -/
 
 @[expose] public section
@@ -44,6 +45,19 @@ theorem exists_bounded_envy_free_protocol_of_core_repair
           protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n :=
   exists_bounded_envy_free_protocol_of_dominate (DominateAssembly.protocol K P)
     (DominateAssembly.protocol_correct K hK P hP) n hn
+
+/-- Sections 2--4 (`thm: main theorem`, `lem:core main`, and `lem:permute`):
+the equal-partition Core construction reduces the target to correct Permute and
+Repair protocols, preserving the paper's explicit bound. -/
+theorem exists_bounded_envy_free_protocol_of_permute_repair
+    (P : PermuteProtocol) (hP : P.Correct) (R : RepairProtocol) (hR : R.Correct)
+    (n : ℕ) (hn : 0 < n) :
+    ∃ protocol : RWProtocol n (Allocation n unitCake),
+      ∀ v : Fin n → Valuation, (∀ i, (v i).Normalized) →
+        ∃ (A : Allocation n unitCake) (count : ℕ),
+          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n :=
+  exists_bounded_envy_free_protocol_of_core_repair (CoreAssembly.protocol P)
+    (CoreAssembly.protocol_correct P hP) R hR n hn
 
 /-- For every positive number of agents, one protocol works for every profile
 of normalized nonnegative integrable densities. It returns a complete envy-free

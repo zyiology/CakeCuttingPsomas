@@ -6,6 +6,9 @@ public import CakeCuttingPsomas.Prefix
 public import CakeCuttingPsomas.PrefixProtocol
 public import CakeCuttingPsomas.BaseCases
 public import CakeCuttingPsomas.Core
+public import CakeCuttingPsomas.Permute
+public import CakeCuttingPsomas.EqualPartition
+public import CakeCuttingPsomas.CoreProtocol
 public import CakeCuttingPsomas.Repair
 public import CakeCuttingPsomas.DominateChoice
 public import CakeCuttingPsomas.DominateRepair

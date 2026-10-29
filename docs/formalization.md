@@ -15,8 +15,10 @@ an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
 Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
 from correct Core and Repair protocols. The resulting
 `exists_bounded_envy_free_protocol_of_core_repair` has the same conclusion and
-query bound. Core and Repair implementations are still needed for the
-unconditional target.
+query bound. Section 4's Core construction satisfies its contract conditional
+on correct Permute. `exists_bounded_envy_free_protocol_of_permute_repair` reduces
+the same target to correct Permute and Repair implementations, which remain to
+be constructed.
 
 ## Files and definitions
 
@@ -62,6 +64,12 @@ unconditional target.
   after refinement, with unchanged query counts.
 - `CakeCuttingPsomas/Core.lean`: the Core protocol contract and the cutter's
   residue contraction lemma.
+- `CakeCuttingPsomas/Permute.lean`: the Permute contract, including suffix
+  assignment, a whole-piece recipient, the indifference property, and query cost.
+- `CakeCuttingPsomas/EqualPartition.lean`: recorded equal partitioning with
+  exact coverage, disjointness, equal cutter values, and at most `n-1` prefix cuts.
+- `CakeCuttingPsomas/CoreProtocol.lean`: Section 4's Core construction and its
+  full correctness contract, conditional only on correct Permute.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
@@ -85,7 +93,7 @@ unconditional target.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
-  Dominate or on Core and Repair, and the unproved unconditional target.
+  Dominate, Core and Repair, or Permute and Repair, and the unproved target.
 - `CakeCuttingPsomas.lean`: imports the complete development.
 
 `Fin n` represents the agents using indices from zero through `n - 1`.
@@ -354,10 +362,28 @@ Mathlib's Stirling lower bound and a loose polynomial estimate for the logarithm
 Repair's real-valued query inequality is bounded by an integer budget without
 adding a rounding cost.
 
-The next work is Section 4's implementations of Core and Repair, reducing them
-to Section 5's Permute protocol. These subroutines and their correctness proofs
-remain necessary for the unconditional theorem. The asymptotic bound
-`2^{O(n log n)}` also remains to be derived from the explicit bound.
+Section 4's Core reduction is proved. `PermuteProtocol.Correct` specifies all of
+`lem:permute`, including its indifference property (ii), without asserting an
+implementation exists. Input labels are retained even for empty pieces. The
+prefix-cut bound is converted to Robertson--Webb queries using the `n+1` cost.
+
+`EqualPartition.run` makes `n-1` prefix cuts with a fixed target computed from
+the cutter's inherited records, leaving the last piece whole. Its correctness
+theorem proves exact coverage, disjointness, equal cutter values, inherited
+representations, and at most `(n-1)(n+1)` queries. Current-cell representations
+of the remaining support supply compatible inputs after each refinement.
+Zero targets and empty cakes need no separate value assumptions.
+
+`CoreAssembly.protocol` follows equal partitioning with Permute.
+`protocol_correct` proves `CoreProtocol.Correct`: the cutter cannot value her
+suffix above an equal input piece, and envy-freeness prevents her from valuing
+it below the whole piece given to some agent. `query_cost_le` proves
+`(n+1)(n-1 + (n.choose 2)(n!)²) ≤ n³(n!)²` for `n ≥ 2`.
+
+The next work is Section 4's Repair reduction to Permute, followed by Section 5's
+Permute construction and correctness proof. These remain necessary for the
+unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
+derived from the explicit bound.
 
 ## Checking
 
