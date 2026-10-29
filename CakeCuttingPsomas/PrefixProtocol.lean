@@ -65,7 +65,8 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
       s'.Correct v ∧ r ∈ Set.Icc 0 P.length ∧ (v i).value (P.prefixAt r).support = t ∧
       (∀ q ∈ Set.Icc 0 P.length, (v i).value (P.prefixAt q).support = t → r ≤ q) ∧
       s.Refines s' ∧ s'.Represents (P.prefixAt r).support ∧
-      ∀ J ∈ s.partition.intervals, Disjoint J.support P.support → J ∈ s'.partition.intervals := by
+      (∀ J ∈ s.partition.intervals, Disjoint J.support P.support → J ∈ s'.partition.intervals) ∧
+      s.TraversalRefines s' := by
   obtain ⟨Is, hd⟩ := P
   induction Is generalizing t with
   | nil =>
@@ -75,7 +76,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
       exact le_antisymm htP ht
     subst t
     refine ⟨0, s, 0, .done _, by omega, hs, ?_, ?_, ?_, refines_refl s, ?_,
-      fun _ h _ ↦ h⟩
+      (fun _ h _ ↦ h), traversalRefines_refl s⟩
     · simp [Piece.length]
     · simp
     · intro q hq _; exact hq.1
@@ -91,7 +92,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
     · have htz := le_antisymm hzero ht
       subst t
       refine ⟨0, s, 0, ?_, by omega, hs, ⟨le_rfl, P.length_nonneg⟩, by simp, ?_,
-        refines_refl s, ?_, fun _ h _ ↦ h⟩
+        refines_refl s, ?_, (fun _ h _ ↦ h), traversalRefines_refl s⟩
       · simp only [prefixCut, prefixCutAux, le_refl, ite_true]; exact .done _
       · intro q hq _; exact hq.1
       · simpa using represents_empty s
@@ -108,7 +109,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
         obtain ⟨x, hx, _⟩ := RWQuery.existsUnique_cut_answer v i I.left_nonneg
           (I.ordered.le.trans I.right_le_one) ht ht1
         obtain ⟨hxI, hval⟩ := RWQuery.cut_answer_before v i I hx htI
-        obtain ⟨s', c, hrun, hs', hc, href, hb, _, hkeep⟩ :=
+        obtain ⟨s', c, hrun, hs', hc, href, hb, _, hkeep, htrav⟩ :=
           recordCut_runs_spec hs I hI x
         have hpos : x - I.left ∈ Set.Icc 0 P.length :=
           ⟨sub_nonneg.mpr hxI.1, by
@@ -120,7 +121,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
           have hsub : x - I.left - I.length ≤ 0 := by dsimp [CakeInterval.length]; linarith [hxI.2]
           rw [Piece.prefix_nonpos _ hsub]
           simpa using hval
-        refine ⟨x - I.left, s', c + 1, ?_, by omega, hs', hpos, hvalue, ?_, href, ?_, ?_⟩
+        refine ⟨x - I.left, s', c + 1, ?_, by omega, hs', hpos, hvalue, ?_, href, ?_, ?_, htrav⟩
         · simp only [prefixCut, prefixCutAux, ite_eq_right hzero, ite_eq_left hfirst]
           exact .ask hx (hrun.map _)
         · intro q hq hqt
@@ -153,7 +154,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
           rw [P.value_eq_sum, T.value_eq_sum]
           rfl
         have htailP : t - s.values i I ≤ (v i).value T.support := by linarith
-        obtain ⟨r, s', c, hrun, hc, hs', hr, hval, hmin, href, hrep, hkeep⟩ :=
+        obtain ⟨r, s', c, hrun, hc, hs', hr, hval, hmin, href, hrep, hkeep, htrav⟩ :=
           ih (t - s.values i I) htail T.disjoint hT htailP
         have hposition : I.length + r ∈ Set.Icc 0 P.length :=
           ⟨add_nonneg I.length_pos.le hr.1, by rw [hlen]; linarith [hr.2]⟩
@@ -163,7 +164,7 @@ private theorem prefixCut_runs_aux {n : ℕ} {s : RecordedState n} {v : Fin n �
             exact dite_eq_left (by dsimp [CakeInterval.length]; linarith [hr.1])
           rw [he, Piece.support_ofInterval]
           simp [hval, hvI]
-        refine ⟨I.length + r, s', c, ?_, hc, hs', hposition, hvalue, ?_, href, ?_, ?_⟩
+        refine ⟨I.length + r, s', c, ?_, hc, hs', hposition, hvalue, ?_, href, ?_, ?_, htrav⟩
         · simpa only [prefixCut, prefixCutAux, ite_eq_right hzero, ite_eq_right hfirst] using
             hrun.map (fun result ↦ (I.length + result.1, result.2))
         · intro q hq hqt
@@ -223,6 +224,19 @@ theorem prefixCut_runs {n : ℕ} {s : RecordedState n} {v : Fin n → Valuation}
   refine ⟨r, s', count, hrun, hc, hs', href, hr, hv, hmin, hp, ?_⟩
   rw [Piece.support_suffix]
   exact (href P hP).diff hp
+
+/-- Section 1.3 and Section 4, `line:rep:cells`: prefix cuts preserve the
+common traversal of every inherited piece, in addition to its support. -/
+theorem prefixCut_runs_traversal {n : ℕ} {s : RecordedState n} {v : Fin n → Valuation}
+    (hs : s.Correct v) (i : Fin n) (P : Piece) (hP : s.Compatible P) (t : ℝ)
+    (ht : 0 ≤ t) (htP : t ≤ (v i).value P.support) :
+    ∃ r s' count, (s.prefixCut i P t).Runs v (r, s') count ∧ count ≤ n + 1 ∧
+      s'.Correct v ∧ s.TraversalRefines s' ∧ r ∈ Set.Icc 0 P.length ∧
+      (v i).value (P.prefixAt r).support = t ∧
+      s'.Represents (P.prefixAt r).support := by
+  obtain ⟨r, s', count, hr, hc, hs', hx, hv, _, _, hp, _, htrav⟩ :=
+    prefixCut_runs_aux hs i P hP t ht htP
+  exact ⟨r, s', count, hr, hc, hs', htrav, hx, hv, hp⟩
 
 /-- Terminal prefix cut for Section 2's cut-and-choose base case. The cutter's
 records locate the cut; only the chooser's split fragment is evaluated. The

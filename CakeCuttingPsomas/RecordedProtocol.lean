@@ -1,6 +1,6 @@
 module
 
-public import CakeCuttingPsomas.Recorded
+public import CakeCuttingPsomas.Traversal
 
 -- This project does not prescribe mathlib's copyright/license header format.
 set_option linter.style.header false
@@ -77,13 +77,15 @@ theorem recordCut_runs_spec {n : ℕ} {s : RecordedState n} {v : Fin n → Valua
     (hs : s.Correct v) (I : CakeInterval) (hI : I ∈ s.partition.intervals) (x : ℝ) :
     ∃ s' count, (s.recordCut I x).Runs v s' count ∧ s'.Correct v ∧ count ≤ n ∧
       s.Refines s' ∧ s'.Compatible (I.before x) ∧ s'.Compatible (I.after x) ∧
-      ∀ J ∈ s.partition.intervals, J ≠ I → J ∈ s'.partition.intervals := by
+      (∀ J ∈ s.partition.intervals, J ≠ I → J ∈ s'.partition.intervals) ∧
+      s.TraversalRefines s' := by
   by_cases h : I.left < x ∧ x < I.right
   · obtain ⟨a, ha, hva⟩ := RWProtocol.evalAgents_runs v I.left x I.left_nonneg h.1.le
       (h.2.le.trans I.right_le_one) (List.finRange n)
     have hfrag := compatible_split_fragments s I hI x h.1 h.2 a
     refine ⟨s.split I x h.1 h.2 a, n, ?_, correct_split hs I hI x h.1 h.2 a ?_,
-      le_rfl, refines_split s I x h.1 h.2 a, hfrag.1, hfrag.2, ?_⟩
+      le_rfl, refines_split s I x h.1 h.2 a, hfrag.1, hfrag.2, ?_,
+      traversalRefines_split s I x h.1 h.2 a⟩
     · simpa [recordCut, h] using ha.map (fun a ↦ s.split I x h.1 h.2 a)
     · intro i
       exact hva i (List.mem_finRange i)
@@ -104,7 +106,8 @@ theorem recordCut_runs_spec {n : ℕ} {s : RecordedState n} {v : Fin n → Valua
           exact h ⟨lt_of_not_ge hle, lt_of_not_ge hr⟩
         simpa only [CakeInterval.before, CakeInterval.after, dite_eq_right hr,
           dite_eq_right (not_lt.mpr hl), dite_eq_left hl] using And.intro hempty hwhole
-    refine ⟨s, 0, ?_, hs, Nat.zero_le _, refines_refl s, hfrag.1, hfrag.2, fun _ h _ ↦ h⟩
+    refine ⟨s, 0, ?_, hs, Nat.zero_le _, refines_refl s, hfrag.1, hfrag.2,
+      (fun _ h _ ↦ h), traversalRefines_refl s⟩
     simp only [recordCut, dite_eq_right h]
     exact .done s
 

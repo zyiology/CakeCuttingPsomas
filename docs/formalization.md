@@ -46,6 +46,8 @@ be constructed.
 - `CakeCuttingPsomas/Recorded.lean`: shared cell partitions, recorded values,
   their correctness and piece compatibility, refinement, restriction to
   participating agents, and cell-based residue construction.
+- `CakeCuttingPsomas/Traversal.lean`: traversal-preserving subdivision, inherited
+  ordered representations, and nonempty bands between distinct prefix positions.
 - `CakeCuttingPsomas/RecordedProtocol.lean`: Eval protocols and the
   Eval-and-subtraction update after a cut, costing at most one Eval per agent.
 - `CakeCuttingPsomas/PrefixProtocol.lean`: smallest-prefix cuts using recorded
@@ -70,6 +72,9 @@ be constructed.
   exact coverage, disjointness, equal cutter values, and at most `n-1` prefix cuts.
 - `CakeCuttingPsomas/CoreProtocol.lean`: Section 4's Core construction and its
   full correctness contract, conditional only on correct Permute.
+- `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
+  pooled equal-value marks on one traversal, exact coverage and disjointness,
+  cell counts and value bounds, and recorded-query accounting.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
@@ -380,9 +385,23 @@ suffix above an equal input piece, and envy-freeness prevents her from valuing
 it below the whole piece given to some agent. `query_cost_le` proves
 `(n+1)(n-1 + (n.choose 2)(n!)²) ≤ n³(n!)²` for `n ≥ 2`.
 
-The next work is Section 4's Repair reduction to Permute, followed by Section 5's
-Permute construction and correctness proof. These remain necessary for the
-unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
+Section 4's common residue partition for Repair is proved.
+`RepairPartition.run` collects each agent's `M-1` cumulative equal-value marks,
+where `M = ⌈1/(3nε)⌉₊`, on the input residue's fixed interval-list traversal.
+`TraversalRefines` and `representAlong` preserve every geometric prefix through
+record refinement. Pooled marks define consecutive paper cells, each potentially
+containing several inherited intervals. `run_correct` proves nonempty cells,
+exact coverage, pairwise disjointness, correct inherited records,
+`M ≤ cellCount ≤ n(M-1)+1 < 1/(2ε)`, value at most `Vᵢ(R)/M ≤ 3nεVᵢ(R)`,
+and at most `n(M-1)(n+1)` queries. `size_bounds` also gives `2n² ≤ M`.
+Cell supports are represented in the final state; use its recorded representation
+to read cell values without queries. Positivity and epsilon assumptions are
+exactly the relevant hypotheses of Repair; almost envy-freeness is not needed.
+
+The next work is Repair's recorded round-robin selection, followed by the levels
+argument showing that Permute preserves all old bundles and the assembly of
+Repair. Section 5's Permute construction and correctness proof follow. These
+remain necessary for the unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
 derived from the explicit bound.
 
 ## Checking
