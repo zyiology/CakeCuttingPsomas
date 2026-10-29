@@ -15,10 +15,10 @@ an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
 Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
 from correct Core and Repair protocols. The resulting
 `exists_bounded_envy_free_protocol_of_core_repair` has the same conclusion and
-query bound. Section 4's Core construction satisfies its contract conditional
-on correct Permute. `exists_bounded_envy_free_protocol_of_permute_repair` reduces
-the same target to correct Permute and Repair implementations, which remain to
-be constructed.
+query bound. Section 4's Core and Repair constructions satisfy their contracts
+conditional on correct Permute. `exists_bounded_envy_free_protocol_of_permute`
+reduces the same target to a correct Permute implementation, which remains to
+be constructed in Section 5.
 
 ## Files and definitions
 
@@ -81,6 +81,9 @@ be constructed.
 - `CakeCuttingPsomas/RepairLevels.lean`: ordered enlarged bundles, suffix levels,
   higher-level preference, and preservation of every old bundle by a correct
   Permute call, using its whole-piece and indifference guarantees.
+- `CakeCuttingPsomas/RepairProtocol.lean`: Section 4's assembled Repair protocol,
+  retained additions, inverse assignment, transport to the original cake, exact
+  recorded residue, and full correctness conditional only on correct Permute.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
@@ -104,7 +107,8 @@ be constructed.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
-  Dominate, Core and Repair, or Permute and Repair, and the unproved target.
+  Dominate, Core and Repair, Permute and Repair, or Permute alone, and the
+  unproved target.
 - `CakeCuttingPsomas.lean`: imports the complete development.
 
 `Fin n` represents the agents using indices from zero through `n - 1`.
@@ -437,11 +441,23 @@ contract directly to that selection, retaining its execution, records, suffix,
 and query guarantees.
 The old bundle labelled `i` is retained by recipient `assignment.symm i`.
 
-The next work is the assembly of Repair, including retained additions, allocation
-transport to the original cake, and total query accounting. Section 5's Permute
-construction and correctness proof follow. These remain necessary for the
-unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
-derived from the explicit bound.
+Section 4's Repair assembly is proved in `RepairAssembly.protocol_correct`.
+`protocol P` prepares the recorded residue, partitions it, performs recorded
+round robin, and calls Permute on the ordered enlarged bundles. The returned
+permutation is `assignment.symm`; each addition is the retained bundle minus its
+old bundle. The allocation is transported to the original cake, and its residue
+is reconstructed from the final records, retaining unchosen cells as well as
+trimmings. `RepairResult.residue_removed` gives the exact identity
+`R_out = R \ ⋃ j, Z_j.support`. Record refinement and envy-freeness are preserved,
+and the additions satisfy the existing round-robin value bounds. Ceiling
+estimates give at most `n/ε + n³(n!)²` queries without rounding the real budget.
+Geometric guards provide unchanged outputs on invalid answer branches; valid
+executions satisfy all guards. No valuations occur in the construction.
+
+`exists_bounded_envy_free_protocol_of_permute` now combines Core and Repair with
+Sections 2--3, leaving only Section 5's Permute construction and correctness proof
+for the unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains
+to be derived from the explicit bound.
 
 ## Checking
 

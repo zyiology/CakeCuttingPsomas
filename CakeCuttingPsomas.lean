@@ -13,6 +13,7 @@ public import CakeCuttingPsomas.Repair
 public import CakeCuttingPsomas.RepairPartition
 public import CakeCuttingPsomas.RepairRoundRobin
 public import CakeCuttingPsomas.RepairLevels
+public import CakeCuttingPsomas.RepairProtocol
 public import CakeCuttingPsomas.DominateChoice
 public import CakeCuttingPsomas.DominateRepair
 public import CakeCuttingPsomas.DominateProgress
