@@ -75,6 +75,9 @@ be constructed.
 - `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
   pooled equal-value marks on one traversal, exact coverage and disjointness,
   cell counts and value bounds, and recorded-query accounting.
+- `CakeCuttingPsomas/RepairRoundRobin.lean`: deterministic recorded round robin,
+  turn availability, disjoint picks, cross-round comparison, half-residue and
+  strict last-pick bounds, and ordered chosen pieces with addition value bounds.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
@@ -398,11 +401,27 @@ Cell supports are represented in the final state; use its recorded representatio
 to read cell values without queries. Positivity and epsilon assumptions are
 exactly the relevant hypotheses of Repair; almost envy-freeness is not needed.
 
-The next work is Repair's recorded round-robin selection, followed by the levels
-argument showing that Permute preserves all old bundles and the assembly of
-Repair. Section 5's Permute construction and correctness proof follow. These
-remain necessary for the unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
-derived from the explicit bound.
+Repair's recorded round robin is proved in `RepairRoundRobin`.
+`select` makes zero queries, choosing whole paper cells by recorded support
+values in fixed agent order for `n-1` rounds. Ties select the first maximizer
+in traversal order. `available_card` and `pick_spec` prove availability;
+`chosen_injective` and `chosen_disjoint` prove distinct, disjoint picks.
+`comparison` proves the paper's cross-round inequality. `available_half`
+preserves at least half of each observer's residue value throughout the run,
+and `pick_strict` gives value strictly above `ε Vᵢ(R)` for every pick by its
+chooser, including `Guarantees.last_pick`. The strict cell-count bound and
+positive residue values supply strictness. `bundle` concatenates each agent's
+cells in pick order, retains represented supports, and has value at most
+`3n(n-1)ε Vᵢ(R) ≤ 3n²ε Vᵢ(R)` to every observer. `retained_value_le` passes
+this bound to any retained portion. `run_correct` connects these guarantees
+directly to `RepairPartition.run_correct`, preserving its query bound and
+inherited records. Almost envy-freeness is not needed for this stage.
+
+The next work is the levels argument showing that Permute preserves all old
+bundles, followed by the assembly of Repair. Section 5's Permute construction
+and correctness proof follow. These remain necessary for the unconditional
+theorem. The asymptotic bound `2^{O(n log n)}` also remains to be derived from
+the explicit bound.
 
 ## Checking
 
