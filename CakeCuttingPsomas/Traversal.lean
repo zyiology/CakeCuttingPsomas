@@ -43,6 +43,25 @@ theorem support_prefix_append (P Q : Piece) (h : Disjoint P.support Q.support) (
     List.mem_append, Set.mem_union, length]
   grind
 
+/-- Section 4, proof of `lem:repair main`: trimming a concatenation continues
+through its pieces in their specified order. -/
+theorem support_suffix_append (P Q : Piece) (h : Disjoint P.support Q.support) (t : ℝ) :
+    ((P.append Q h).suffixAt t).support =
+      (P.suffixAt t).support ∪ (Q.suffixAt (t - P.length)).support := by
+  rw [support_suffix, support_append, support_prefix_append, support_suffix, support_suffix]
+  have hPQ := Set.disjoint_left.mp h
+  have hP := P.prefix_subset t
+  have hQ := Q.prefix_subset (t - P.length)
+  ext x
+  simp only [Set.mem_sdiff, Set.mem_union]
+  aesop
+
+/-- A suffix beginning at a concatenation boundary is exactly the trailing
+piece in support, including when either piece is empty (Section 4). -/
+theorem support_suffix_append_length (P Q : Piece) (h : Disjoint P.support Q.support) :
+    ((P.append Q h).suffixAt P.length).support = Q.support := by
+  rw [support_suffix_append, support_suffix_length, sub_self, suffix_zero, Set.empty_union]
+
 /-- Distinct traversal positions leave a nonempty intervening piece, even
 when its value is zero to every participating agent (Section 1.3). -/
 theorem exists_mem_prefix_diff (P : Piece) {a b : ℝ}

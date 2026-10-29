@@ -78,6 +78,9 @@ be constructed.
 - `CakeCuttingPsomas/RepairRoundRobin.lean`: deterministic recorded round robin,
   turn availability, disjoint picks, cross-round comparison, half-residue and
   strict last-pick bounds, and ordered chosen pieces with addition value bounds.
+- `CakeCuttingPsomas/RepairLevels.lean`: ordered enlarged bundles, suffix levels,
+  higher-level preference, and preservation of every old bundle by a correct
+  Permute call, using its whole-piece and indifference guarantees.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
@@ -417,11 +420,28 @@ this bound to any retained portion. `run_correct` connects these guarantees
 directly to `RepairPartition.run_correct`, preserving its query bound and
 inherited records. Almost envy-freeness is not needed for this stage.
 
-The next work is the levels argument showing that Permute preserves all old
-bundles, followed by the assembly of Repair. Section 5's Permute construction
-and correctness proof follow. These remain necessary for the unconditional
-theorem. The asymptotic bound `2^{O(n log n)}` also remains to be derived from
-the explicit bound.
+Repair's levels argument is proved in `RepairLevels`.
+`Picks.input` concatenates chosen cells in round order before the old bundle;
+`ofRoundRobin_added` identifies its added cake with the existing round-robin
+bundle. The pieces are disjoint, represented by inherited records, and partition
+`Picks.cake`, which excludes unchosen residue. Cell-boundary suffixes bound any
+retained suffix between its complete trailing cells and at most one additional
+partial cell. `Picks.level` counts complete retained cells, or is `-1` when the
+old bundle is cut. `higher_levels_preferred` proves the paper's strict comparison
+for a gap of at least two levels. `missing_level` and
+`old_bundle_subset_of_preference` use envy-freeness, finite holder counting, and
+Permute's property (ii) to exclude level `-1`. `roundRobin_old_bundle_subset`
+supplies the preference hypotheses from the recorded selection and Repair's
+original assumptions. `roundRobin_permute_preserves` applies the existing Permute
+contract directly to that selection, retaining its execution, records, suffix,
+and query guarantees.
+The old bundle labelled `i` is retained by recipient `assignment.symm i`.
+
+The next work is the assembly of Repair, including retained additions, allocation
+transport to the original cake, and total query accounting. Section 5's Permute
+construction and correctness proof follow. These remain necessary for the
+unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains to be
+derived from the explicit bound.
 
 ## Checking
 
