@@ -52,6 +52,12 @@ needed to establish the unconditional target.
   cost, and the paper's explicit bound.
 - `CakeCuttingPsomas/Dominate.lean`: the domination protocol interface and its
   correctness specification, including records for the recursive residue.
+- `CakeCuttingPsomas/RecordedAllocation.lean`: shared partial-allocation outputs
+  and inherited-record guarantees for Section 3's subroutines.
+- `CakeCuttingPsomas/Core.lean`: the Core protocol contract and the cutter's
+  residue contraction lemma.
+- `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
+  bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -202,8 +208,29 @@ bound for arbitrary compatible cakes and unnormalized or zero valuations.
 The conditional theorem in `Main.lean` specializes this protocol to the free
 initial normalized records and the unit cake.
 
+Section 3's subroutine interfaces are specified by `CoreProtocol.Correct` and
+`RepairProtocol.Correct`; neither asserts that an implementation exists.
+`RecordedAllocationResult` packages an allocation, updated records, and an exact
+residue piece. Its `Inherits` guarantee preserves representations of earlier
+pieces through `RecordedState.Refines`, records all output bundles, and makes
+the residue compatible for the next call. Earlier interval lists may need
+subdivision after refinement.
+
+Core's contract includes envy-freeness, the cutter's exact `1/n` share, and the
+`coreQueryBound n = n^3 (n!)^2` cost. `cutter_residue_le` derives the cutter's
+`(n-1)/n` residue contraction from the share equality, including zero-valued and
+empty inputs. Repair's contract retains the paper's epsilon, positive-residue,
+and almost-envy-free hypotheses. It returns a permutation `σ` and disjoint
+additions `Z_j` from the old residue, with output bundle `σ(j)` equal in support
+to `D_j ∪ Z_j`. The contract bounds each addition's value and requires the query
+count to be at most `n/ε + coreQueryBound n`, expressed over the reals.
+`old_bundle_subset` and `residue_removed` prove the corresponding containment
+and exact residue identities from the output data.
+
+The next Section 3 milestone is the choice lemma for `α`, `i*`, `j*`, and `π`,
+followed by domination-count progress, termination, and query accounting.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,
-and `Dominate`, with their correctness, termination, and query accounting proofs.
+and `Dominate`, with their correctness proofs.
 Proving the `DominateProtocol.Correct` contract will discharge the hypothesis
 of the conditional main theorem. The asymptotic bound `2^{O(n log n)}` also
 remains to be derived from the explicit bound.

@@ -5,3 +5,5 @@ public import CakeCuttingPsomas.Allocation
 public import CakeCuttingPsomas.Prefix
 public import CakeCuttingPsomas.PrefixProtocol
 public import CakeCuttingPsomas.BaseCases
+public import CakeCuttingPsomas.Core
+public import CakeCuttingPsomas.Repair
