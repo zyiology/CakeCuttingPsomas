@@ -58,6 +58,8 @@ needed to establish the unconditional target.
   residue contraction lemma.
 - `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
   bundle permutation, old-bundle containment, and exact residue formula.
+- `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
+  geometric scale, two agents, and bundle permutation.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -227,8 +229,20 @@ count to be at most `n/ε + coreQueryBound n`, expressed over the reals.
 `old_bundle_subset` and `residue_removed` prove the corresponding containment
 and exact residue identities from the output data.
 
-The next Section 3 milestone is the choice lemma for `α`, `i*`, `j*`, and `π`,
-followed by domination-count progress, termination, and query accounting.
+Section 3's choice lemma (`lem:alpha pi exist for dominate`) is proved as
+`DominateChoice.exists_choice`. Its hypotheses are an envy-free old allocation,
+an envy-free allocation of its represented residue with Core's exact cutter
+share, and absence of a dominated group after combining them. It concludes
+positive new residue value for every agent and witnesses satisfying (S1)--(S3),
+with `α = DominateChoice.scale n t` and `2 ≤ t ≤ n+1`. The proof establishes
+strong connectivity of the old non-domination graph using reachable sets,
+the cutter's normalized gap sum and `1/(n-1)` average bound, and the paper's
+two cases. The small-edge case uses finite counting to find an empty geometric
+band and `List.formPerm` to cycle a simple directed path. This is a mathematical
+existence theorem; the search over inherited records is still to be implemented.
+
+The next Section 3 milestones are domination-count progress, termination, query
+accounting, and construction of the protocol from the recorded-value searches.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,
 and `Dominate`, with their correctness proofs.
 Proving the `DominateProtocol.Correct` contract will discharge the hypothesis
