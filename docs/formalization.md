@@ -241,6 +241,15 @@ two cases. The small-edge case uses finite counting to find an empty geometric
 band and `List.formPerm` to cycle a simple directed path. This is a mathematical
 existence theorem; the search over inherited records is still to be implemented.
 
+The Repair call's mathematical preconditions in Section 3's proof of
+`lem: dominate` are proved by `DominateChoice.Spec.repair_preconditions`.
+`permutedCombined` constructs the allocation with bundles `X_i ∪ Y_{π(i)}`
+using the existing allocation adapters, with exact residue `Y.residue`.
+Envy-freeness of `X` and `Y` and (S2) give almost envy-freeness; the scale's
+exponent lower bound gives `0 < α ≤ (4n²)⁻² < 1/(6n³)`. Positive residue
+values are inherited from the choice lemma. Preparing recorded representations
+and invoking the protocol remain separate construction steps.
+
 The next Section 3 milestones are domination-count progress, termination, query
 accounting, and construction of the protocol from the recorded-value searches.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,

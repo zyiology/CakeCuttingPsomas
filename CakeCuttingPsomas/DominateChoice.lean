@@ -435,6 +435,90 @@ theorem exists_choice {n : ℕ} {C R : Piece} (X : Allocation n C)
       (v i).value (Y.bundle i).support - (v i).value (Y.bundle (π j)).support at hi
     linarith
 
+/-- Section 3, proof of `lem: dominate`, validity of the Repair call:
+bundle `i` is the old bundle `Xᵢ` followed by `Y_{π(i)}`. -/
+def permutedCombined {n : ℕ} {C R : Piece} (X : Allocation n C)
+    (Y : Allocation n R) (hR : R.support = X.residue) (π : Equiv.Perm (Fin n)) :
+    Allocation n C :=
+  X.combineRecursive Y (π.symm.trans (Equiv.Set.univ (Fin n)).symm) hR
+
+theorem permutedCombined_bundle_support {n : ℕ} {C R : Piece} (X : Allocation n C)
+    (Y : Allocation n R) (hR : R.support = X.residue) (π : Equiv.Perm (Fin n))
+    (i : Fin n) :
+    ((permutedCombined X Y hR π).bundle i).support =
+      (X.bundle i).support ∪ (Y.bundle (π i)).support := by
+  simp [permutedCombined, Allocation.combineRecursive, Allocation.extendTo, Equiv.Set.univ]
+
+theorem permutedCombined_bundle_value {n : ℕ} {C R : Piece} (X : Allocation n C)
+    (Y : Allocation n R) (hR : R.support = X.residue) (π : Equiv.Perm (Fin n))
+    (v : Valuation) (i : Fin n) :
+    v.value ((permutedCombined X Y hR π).bundle i).support =
+      v.value (X.bundle i).support + v.value (Y.bundle (π i)).support := by
+  rw [permutedCombined, Allocation.combineRecursive, Allocation.value_bundle_combine]
+  simp [Allocation.extendTo, Equiv.Set.univ]
+
+theorem permutedCombined_residue {n : ℕ} {C R : Piece} (X : Allocation n C)
+    (Y : Allocation n R) (hR : R.support = X.residue) (π : Equiv.Perm (Fin n)) :
+    (permutedCombined X Y hR π).residue = Y.residue := by
+  rw [permutedCombined, Allocation.combineRecursive, Allocation.residue_combine,
+    Allocation.allocated_extendTo, ← hR]
+  rfl
+
+/-- Section 3, proof of `lem: dominate`, validity of the Repair call:
+every allowed scale is positive and strictly below Repair's epsilon bound. -/
+theorem scale_repair_bounds {n t : ℕ} (hn : 3 ≤ n) (ht : 2 ≤ t) :
+    0 < scale n t ∧ scale n t ≤ ((4 * (n : ℝ) ^ 2)⁻¹) ^ 2 ∧
+      ((4 * (n : ℝ) ^ 2)⁻¹) ^ 2 < 1 / (6 * (n : ℝ) ^ 3) := by
+  have hnreal : (3 : ℝ) ≤ n := by exact_mod_cast hn
+  have hnpos : (0 : ℝ) < n := by linarith
+  have hbase : 0 < 4 * (n : ℝ) ^ 2 := by positivity
+  have hq : (4 * (n : ℝ) ^ 2)⁻¹ ≤ 1 := by
+    rw [inv_eq_one_div, div_le_one hbase]
+    nlinarith
+  refine ⟨by unfold scale; positivity,
+    pow_le_pow_of_le_one (le_of_lt (inv_pos.mpr hbase)) hq ht, ?_⟩
+  rw [inv_pow, inv_eq_one_div]
+  apply (div_lt_div_iff₀ (by positivity : 0 < (4 * (n : ℝ) ^ 2) ^ 2)
+    (by positivity : 0 < 6 * (n : ℝ) ^ 3)).mpr
+  have hmul : 6 * (n : ℝ) ^ 3 < (16 * (n : ℝ)) * (n : ℝ) ^ 3 :=
+    mul_lt_mul_of_pos_right (by linarith) (by positivity)
+  nlinarith
+
+/-- Section 3, proof of `lem: dominate`, validity of the Repair call:
+envy-freeness of `X` and `Y` and (S2) imply almost envy-freeness of `D`. -/
+theorem Spec.permutedCombined_almost_envyFree {n t : ℕ} {C R : Piece}
+    {X : Allocation n C} {Y : Allocation n R} {v : Fin n → Valuation}
+    {a b : Fin n} {π : Equiv.Perm (Fin n)} (h : Spec X Y v t a b π)
+    (hR : R.support = X.residue) (hX : X.EnvyFree v) (hY : Y.EnvyFree v) :
+    ∀ i j, (v i).value ((permutedCombined X Y hR π).bundle j).support -
+      scale n t * (v i).value (permutedCombined X Y hR π).residue ≤
+        (v i).value ((permutedCombined X Y hR π).bundle i).support := by
+  intro i j
+  rw [permutedCombined_bundle_value, permutedCombined_bundle_value, permutedCombined_residue]
+  have hx := hX i j
+  have hy := hY i (π j)
+  have hs := h.small_loss i
+  linarith
+
+/-- Section 3, proof of `lem: dominate`, validity of the Repair call:
+the choice specification supplies all mathematical preconditions of Repair.
+Positive residue values are supplied by `exists_choice`; record preparation
+and the protocol execution are separate obligations. -/
+theorem Spec.repair_preconditions {n t : ℕ} {C R : Piece}
+    {X : Allocation n C} {Y : Allocation n R} {v : Fin n → Valuation}
+    {a b : Fin n} {π : Equiv.Perm (Fin n)} (h : Spec X Y v t a b π)
+    (hn : 3 ≤ n) (hR : R.support = X.residue)
+    (hX : X.EnvyFree v) (hY : Y.EnvyFree v)
+    (hpos : ∀ i, 0 < (v i).value Y.residue) :
+    0 < scale n t ∧ scale n t ≤ 1 / (6 * (n : ℝ) ^ 3) ∧
+      (∀ i, 0 < (v i).value (permutedCombined X Y hR π).residue) ∧
+      (∀ i j, (v i).value ((permutedCombined X Y hR π).bundle j).support -
+        scale n t * (v i).value (permutedCombined X Y hR π).residue ≤
+          (v i).value ((permutedCombined X Y hR π).bundle i).support) := by
+  obtain ⟨hαpos, hαle, hαlt⟩ := scale_repair_bounds hn h.exponent_lower
+  refine ⟨hαpos, hαle.trans hαlt.le, ?_, h.permutedCombined_almost_envyFree hR hX hY⟩
+  simpa only [permutedCombined_residue] using hpos
+
 end DominateChoice
 
 end CakeCuttingPsomas
