@@ -8,3 +8,4 @@ public import CakeCuttingPsomas.BaseCases
 public import CakeCuttingPsomas.Core
 public import CakeCuttingPsomas.Repair
 public import CakeCuttingPsomas.DominateChoice
+public import CakeCuttingPsomas.DominateRepair

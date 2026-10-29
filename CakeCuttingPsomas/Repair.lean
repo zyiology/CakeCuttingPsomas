@@ -56,6 +56,17 @@ theorem RepairResult.old_bundle_subset {n : ℕ} {C : Piece} {D : Allocation n C
   rw [r.bundle_eq]
   exact Set.subset_union_left
 
+/-- Section 3, proof of `lem: dominate`, the post-Repair advantage calculation:
+the value of a reassigned bundle is its old value plus its addition's value. -/
+theorem RepairResult.value_bundle {n : ℕ} {C : Piece} {D : Allocation n C}
+    (r : RepairResult n C D) (v : Valuation) (j : Fin n) :
+    v.value (r.allocation.bundle (r.permutation j)).support =
+      v.value (D.bundle j).support + v.value (r.addition j).support := by
+  rw [r.bundle_eq]
+  exact v.value_union (D.bundle j).measurableSet_support (r.addition j).measurableSet_support
+    (D.bundle j).support_subset_unit (r.addition j).support_subset_unit
+    ((D.disjoint_bundle_residue j).mono_right (r.addition_subset j))
+
 /-- Section 3's `lem:repair main`: the output residue is exactly the old residue
 minus the additions. This follows from the bundle identities and permutation. -/
 theorem RepairResult.residue_removed {n : ℕ} {C : Piece} {D : Allocation n C}

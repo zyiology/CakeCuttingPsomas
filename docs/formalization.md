@@ -60,6 +60,8 @@ needed to establish the unconditional target.
   bundle permutation, old-bundle containment, and exact residue formula.
 - `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
   geometric scale, two agents, and bundle permutation.
+- `CakeCuttingPsomas/DominateRepair.lean`: Section 3's post-Repair advantage
+  for the distinguished agent over the reassigned distinguished bundle.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -249,6 +251,15 @@ Envy-freeness of `X` and `Y` and (S2) give almost envy-freeness; the scale's
 exponent lower bound gives `0 < α ≤ (4n²)⁻² < 1/(6n³)`. Positive residue
 values are inherited from the choice lemma. Preparing recorded representations
 and invoking the protocol remain separate construction steps.
+
+Section 3's immediate post-Repair advantage is proved by
+`DominateChoice.Spec.postRepair_advantage`: Repair's envy-free output and
+addition bounds, together with (S2)--(S3) and envy-freeness of `X`, give
+`Vᵢ(Wᵢ) - Vᵢ(W_{σ(j)}) ≥ (n² - 1) α Vᵢ(U)` for the distinguished agents.
+`RepairResult.value_bundle` gives exact value additivity for each reassigned
+bundle. `Spec.postRepair_strict_advantage` proves positivity and `i ≠ σ(j)`
+when `n ≥ 3` and `Vᵢ(U) > 0`. Preservation through subsequent Core calls and
+conversion of the advantage into domination remain to be proved.
 
 The next Section 3 milestones are domination-count progress, termination, query
 accounting, and construction of the protocol from the recorded-value searches.
