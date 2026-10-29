@@ -4,6 +4,8 @@ public import CakeCuttingPsomas.Main
 public import CakeCuttingPsomas.Allocation
 public import CakeCuttingPsomas.Prefix
 public import CakeCuttingPsomas.PrefixProtocol
+public import CakeCuttingPsomas.Suffix
+public import CakeCuttingPsomas.SuffixProtocol
 public import CakeCuttingPsomas.BaseCases
 public import CakeCuttingPsomas.Core
 public import CakeCuttingPsomas.Permute
