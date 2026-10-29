@@ -11,3 +11,4 @@ public import CakeCuttingPsomas.DominateChoice
 public import CakeCuttingPsomas.DominateRepair
 public import CakeCuttingPsomas.DominateProgress
 public import CakeCuttingPsomas.DominateShrinking
+public import CakeCuttingPsomas.DominateTermination

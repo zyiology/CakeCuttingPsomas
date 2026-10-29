@@ -258,6 +258,51 @@ end DominateShrinking
 
 namespace DominateChoice
 
+/-- Section 3, proof of `lem: dominate`: any shrinking extension with the
+stopping bound supplies the hypotheses for strict domination-count progress. -/
+theorem Spec.progress_of_extension {n t : ℕ} {C R : Piece}
+    {X : Allocation n C} {Y : Allocation n R} {v : Fin n → Valuation}
+    {a b : Fin n} {π : Equiv.Perm (Fin n)} (h : Spec X Y v t a b π)
+    (hn : 3 ≤ n) (hR : R.support = X.residue)
+    (r : RepairResult n C (permutedCombined X Y hR π))
+    (z : RecordedAllocationResult n C)
+    (hX : X.EnvyFree v) (hr : r.allocation.EnvyFree v)
+    (hadd : ∀ i j, (v i).value (r.addition j).support ≤
+      3 * (n : ℝ) ^ 2 * scale n t *
+        (v i).value (permutedCombined X Y hR π).residue)
+    (he : DominateShrinking.Extension r.toRecordedAllocationResult z v)
+    (hres : (v a).value z.residue.support ≤ scale n t * (v a).value Y.residue) :
+    (∀ i j, X.Dominates v i j → z.allocation.Dominates v i (r.permutation j)) ∧
+      (∀ i, X.dominationCount v i ≤ z.allocation.dominationCount v i) ∧
+      X.dominationCount v a + 1 ≤ z.allocation.dominationCount v a ∧
+      X.totalDominationCount v + 1 ≤ z.allocation.totalDominationCount v := by
+  have hkeep : ∀ j, (X.bundle j).support ⊆
+      (z.allocation.bundle (r.permutation j)).support := by
+    intro j
+    exact (Set.subset_union_left.trans
+      ((permutedCombined_bundle_support X Y hR π j).symm.subset)).trans
+      ((r.old_bundle_subset j).trans (he.keep _))
+  have hupper : ∀ j, (z.allocation.bundle (r.permutation j)).support ⊆
+      (X.bundle j).support ∪ (X.residue \ z.allocation.residue) := by
+    intro j x hx
+    have hnot : x ∉ z.allocation.residue :=
+      fun hres ↦ Set.disjoint_left.mp (z.allocation.disjoint_bundle_residue _) hx hres
+    rcases he.upper (r.permutation j) hx with hx | hx
+    · rw [r.bundle_eq, permutedCombined_bundle_support] at hx
+      rcases hx with (hx | hx) | hx
+      · exact Or.inl hx
+      · exact Or.inr ⟨hR.subset (Y.contained _ hx), hnot⟩
+      · have hsub : (permutedCombined X Y hR π).residue ⊆ X.residue := by
+          rw [permutedCombined_residue]
+          exact Y.residue_subset.trans hR.subset
+        exact Or.inr ⟨hsub (r.addition_subset j hx), hnot⟩
+    · have hx' : x ∈ Y.residue := by
+        rw [← r.residue_eq, r.residue_removed, permutedCombined_residue] at hx
+        exact hx.1
+      exact Or.inr ⟨hR.subset (Y.residue_subset hx'), hnot⟩
+  exact h.progress_after_shrinking hn hR r z.allocation hX hr hadd
+    he.envyFree hkeep hupper (he.gap a (r.permutation b)) (by rwa [← z.residue_eq])
+
 /-- Section 3, proof of `lem: dominate`: the inner loop supplies all extension
 hypotheses needed for strict domination-count progress after Repair. -/
 theorem Spec.shrinking_progress {n t : ℕ} {C R : Piece}
@@ -295,32 +340,7 @@ theorem Spec.shrinking_progress {n t : ℕ} {C R : Piece}
       (scale_repair_bounds hn h.exponent_lower).1
       ((v a).value_nonneg Y.measurableSet_residue Y.residue_subset_unit)
       r.toRecordedAllocationResult v hs hi hr hinit
-  have hkeep : ∀ j, (X.bundle j).support ⊆
-      (z.allocation.bundle (r.permutation j)).support := by
-    intro j
-    exact (Set.subset_union_left.trans
-      ((permutedCombined_bundle_support X Y hR π j).symm.subset)).trans
-      ((r.old_bundle_subset j).trans (he.keep _))
-  have hupper : ∀ j, (z.allocation.bundle (r.permutation j)).support ⊆
-      (X.bundle j).support ∪ (X.residue \ z.allocation.residue) := by
-    intro j x hx
-    have hnot : x ∉ z.allocation.residue :=
-      fun hres ↦ Set.disjoint_left.mp (z.allocation.disjoint_bundle_residue _) hx hres
-    rcases he.upper (r.permutation j) hx with hx | hx
-    · rw [r.bundle_eq, permutedCombined_bundle_support] at hx
-      rcases hx with (hx | hx) | hx
-      · exact Or.inl hx
-      · exact Or.inr ⟨hR.subset (Y.contained _ hx), hnot⟩
-      · have hsub : (permutedCombined X Y hR π).residue ⊆ X.residue := by
-          rw [permutedCombined_residue]
-          exact Y.residue_subset.trans hR.subset
-        exact Or.inr ⟨hsub (r.addition_subset j hx), hnot⟩
-    · have hx' : x ∈ Y.residue := by
-        rw [← r.residue_eq, r.residue_removed, permutedCombined_residue] at hx
-        exact hx.1
-      exact Or.inr ⟨hR.subset (Y.residue_subset hx'), hnot⟩
-  have hp := h.progress_after_shrinking hn hR r z.allocation hX hr hadd
-    he.envyFree hkeep hupper (he.gap a (r.permutation b)) (by rwa [← z.residue_eq])
+  have hp := h.progress_of_extension hn hR r z hX hr hadd he hres
   exact ⟨z, k, count, hz, hzs, hzi, he.envyFree, hk, hc, hres, hp⟩
 
 end DominateChoice

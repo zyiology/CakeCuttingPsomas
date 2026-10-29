@@ -67,6 +67,9 @@ needed to establish the unconditional target.
 - `CakeCuttingPsomas/DominateShrinking.lean`: recorded shrinking loop, preservation
   of bundle advantages and containments, geometric contraction, logarithmic
   stopping bound, and integration with domination-count progress.
+- `CakeCuttingPsomas/DominateTermination.lean`: completed outer-iteration relation,
+  preserved loop invariants, well-founded termination, and the `n²` bound on
+  non-returning iterations, conditional on branch availability.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -287,8 +290,29 @@ the stopping threshold within `⌈n log(1/α)⌉₊` calls and at most that many
 supplies all extension hypotheses of `progress_after_shrinking`, proving strict
 domination-count progress for the resulting legal execution.
 
-The next Section 3 milestones are termination of the outer Dominate loop, total
-query accounting, and construction of its recorded-value searches.
+`DominateTermination.PreparedIteration` packages an actual initial Core execution,
+the failed dominated-group test, a valid choice, and an actual Repair execution
+with their correctness guarantees. `PreparedIteration.complete` finishes shrinking
+conditional on Core's contract. `Iteration` retains that shrinking execution and
+its extension guarantees; `Iteration.progress` derives the strict measure increase
+and preserves the loop invariants. No progress inequality is assumed as a field.
+
+For a trace of `k` completed non-returning iterations, `trace_progress` and
+`trace_bound` prove `μ(X₀) + k ≤ μ(Xₖ)` and `k ≤ n² - μ(X₀) ≤ n²`.
+Here `μ` is `totalDominationCount`; its initial value is not assumed to be zero.
+The remaining-capacity measure `n² - μ(X)` strictly decreases, yielding
+`wellFounded` and `no_infinite_continuations`. `terminates_of_prepared` proves a
+return within that bound when each reachable iteration can return or prepare
+Core, choice, and Repair. This branch-availability hypothesis remains explicit:
+the recorded-value searches and full outer query protocol are not implemented.
+`reachable_invariants` and `Returns.output` give correct inherited records,
+envy-freeness, and a dominated group for the returning allocation.
+`outer_iteration_bound` allows the final returning iteration, giving at most
+`n² + 1` outer iterations (and initial Core calls), and at most `n²` Repair calls.
+Shrinking Core calls are counted separately.
+
+The next Section 3 milestones are total query accounting and construction of the
+outer protocol and its recorded-value searches.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,
 and `Dominate`, with their correctness proofs.
 Proving the `DominateProtocol.Correct` contract will discharge the hypothesis
