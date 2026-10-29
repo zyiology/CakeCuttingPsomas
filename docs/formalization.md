@@ -62,6 +62,8 @@ needed to establish the unconditional target.
   geometric scale, two agents, and bundle permutation.
 - `CakeCuttingPsomas/DominateRepair.lean`: Section 3's post-Repair advantage
   for the distinguished agent over the reassigned distinguished bundle.
+- `CakeCuttingPsomas/DominateProgress.lean`: inheritance of dominations after
+  shrinking, strict domination-count progress, and the `n²` bound on the total.
 - `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: the conditional normalized unit-cake theorem and
@@ -258,10 +260,20 @@ addition bounds, together with (S2)--(S3) and envy-freeness of `X`, give
 `Vᵢ(Wᵢ) - Vᵢ(W_{σ(j)}) ≥ (n² - 1) α Vᵢ(U)` for the distinguished agents.
 `RepairResult.value_bundle` gives exact value additivity for each reassigned
 bundle. `Spec.postRepair_strict_advantage` proves positivity and `i ≠ σ(j)`
-when `n ≥ 3` and `Vᵢ(U) > 0`. Preservation through subsequent Core calls and
-conversion of the advantage into domination remain to be proved.
+when `n ≥ 3` and `Vᵢ(U) > 0`.
 
-The next Section 3 milestones are domination-count progress, termination, query
+`Allocation.advantage_le_combine` proves that each envy-free addition preserves
+bundle advantages. `DominateChoice.Spec.progress_after_shrinking` proves progress
+for a final envy-free extension satisfying the paper's bundle containments,
+preservation of the post-Repair advantage, and final residue bound. Old
+dominations transfer through `σ`; every domination count is nondecreasing,
+and the distinguished count and their sum increase by at least one.
+`Allocation.dominatedAgents`, `dominationCount`, and `totalDominationCount`
+include self-indices exactly when the paper's domination inequality holds.
+`totalDominationCount_le_sq` bounds the total by `n²`. Constructing the shrinking
+loop and establishing its extension hypotheses and iteration bound remain open.
+
+The next Section 3 milestones are termination, query
 accounting, and construction of the protocol from the recorded-value searches.
 The full development still needs implementations of `Permute`, `Core`, `Repair`,
 and `Dominate`, with their correctness proofs.

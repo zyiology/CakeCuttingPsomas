@@ -9,3 +9,4 @@ public import CakeCuttingPsomas.Core
 public import CakeCuttingPsomas.Repair
 public import CakeCuttingPsomas.DominateChoice
 public import CakeCuttingPsomas.DominateRepair
+public import CakeCuttingPsomas.DominateProgress

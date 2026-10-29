@@ -107,6 +107,16 @@ theorem value_bundle_combine (X Y : Allocation n C) (hY : Y.allocated ⊆ X.resi
     (X.bundle i).support_subset_unit (Y.bundle i).support_subset_unit
     (disjoint_bundle_of_allocated_subset_residue X Y hY i i)
 
+/-- Section 3, proof of `lem: dominate`, the shrinking loop: adding an envy-free
+allocation from the residue does not decrease any agent's bundle advantage. -/
+theorem advantage_le_combine (X Y : Allocation n C) (hY : Y.allocated ⊆ X.residue)
+    (v : Fin n → Valuation) (hYef : Y.EnvyFree v) (i j : Fin n) :
+    (v i).value (X.bundle i).support - (v i).value (X.bundle j).support ≤
+      (v i).value ((X.combine Y hY).bundle i).support -
+        (v i).value ((X.combine Y hY).bundle j).support := by
+  rw [value_bundle_combine, value_bundle_combine]
+  linarith [hYef i j]
+
 /-- Combining two envy-free allocations on disjoint parts preserves envy-freeness,
 as stated in Section 2 of the paper immediately after the domination definition. -/
 theorem envyFree_combine (X Y : Allocation n C) (hY : Y.allocated ⊆ X.residue)
