@@ -44,6 +44,16 @@ inductive RWProtocol.Runs {n : ℕ} {α : Type} (v : Fin n → Valuation) :
 
 namespace RWQuery
 
+/-- Legal answers are unique, including flat regions: Cut selects the smallest point. -/
+theorem AnswerValid.unique {n : ℕ} {v : Fin n → Valuation} {q : RWQuery n}
+    {a b : ℝ} (ha : q.AnswerValid v a) (hb : q.AnswerValid v b) : a = b := by
+  cases q with
+  | eval i l r => exact ha.2.2.2.trans hb.2.2.2.symm
+  | cut i l t =>
+    obtain ⟨_, _, _, _, hal, har, hav, ham⟩ := ha
+    obtain ⟨_, _, _, _, hbl, hbr, hbv, hbm⟩ := hb
+    exact le_antisymm (ham b hbl hbr hbv) (hbm a hal har hav)
+
 /-- Relabel participating agents without changing the requested information. -/
 def relabel {m n : ℕ} (f : Fin m → Fin n) : RWQuery m → RWQuery n
   | .eval i a b => .eval (f i) a b
@@ -58,6 +68,19 @@ theorem answerValid_relabel {m n : ℕ} (v : Fin n → Valuation)
 end RWQuery
 
 namespace RWProtocol
+
+/-- A protocol's legal executions have the same result and exact query count. -/
+theorem Runs.unique {n : ℕ} {α : Type} {v : Fin n → Valuation}
+    {p : RWProtocol n α} {a b : α} {c d : ℕ}
+    (ha : p.Runs v a c) (hb : p.Runs v b d) : a = b ∧ c = d := by
+  induction ha generalizing b d with
+  | done a => cases hb; exact ⟨rfl, rfl⟩
+  | @ask q next answer result count valid rest ih =>
+    cases hb with
+    | ask valid' rest' =>
+      obtain rfl := valid.unique valid'
+      obtain ⟨hr, hc⟩ := ih rest'
+      exact ⟨hr, congrArg (· + 1) hc⟩
 
 /-- Sequence protocols; the continuation uses only the first protocol's result. -/
 def bind {n : ℕ} {α β : Type} : RWProtocol n α → (α → RWProtocol n β) → RWProtocol n β

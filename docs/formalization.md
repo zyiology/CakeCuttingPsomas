@@ -58,6 +58,12 @@ be constructed in Section 5.
   through successive caps, and the last actual trim's equality witness.
 - `CakeCuttingPsomas/SuffixProtocol.lean`: recorded cap trimming along an inherited
   traversal, with canonical original-piece suffixes and at most `n + 1` queries.
+- `CakeCuttingPsomas/Candidate.lean`: record-independent candidates for fixed
+  orders, existence, greatest-feasible-suffix characterization, uniqueness through
+  subdivision, the paper's containment claim, and envy-free extension equality.
+- `CakeCuttingPsomas/CandidateProtocol.lean`: one recorded candidate construction,
+  its cap sequences and query bound, conversion back to labelled allocations,
+  and bundle-support independence across correct record states.
 - `CakeCuttingPsomas/BaseCases.lean`: the one- and two-agent branches of `Divide`,
   complete and envy-free on arbitrary input pieces, using zero and at most two queries.
 - `CakeCuttingPsomas/QueryBound.lean`: the domination cost, cumulative recursive
@@ -475,8 +481,7 @@ Satisfied caps, entirely zero-valued pieces, empty pieces, and repeated caps
 remove nothing. `CapTrimSequence` proves all processed caps hold, every original
 suffix satisfying them survives, and a proper final suffix has an equality
 witness from the last actual trim. These are the geometric facts preceding
-`eq:permute-caps` and needed for `claim:containment`; candidate construction
-itself is not yet implemented.
+`eq:permute-caps` and used by the candidate construction and containment proof below.
 
 `RecordedState.prefixCut_runs_spec` exposes smallest-prefix minimality,
 traversal refinement, and compatibility of the remaining canonical suffix in
@@ -496,6 +501,34 @@ cells before concatenation, preserving the order of picks before the old bundle.
 Only old-bundle supports are prescribed by Repair's external contract. Both
 callers satisfy Permute's traversal precondition without extra queries or changes
 to Core and Repair's external guarantees.
+
+Section 5's fixed-order candidate milestone is proved.
+`IsCandidate` characterizes each bundle as the greatest suffix satisfying all
+earlier agents' caps. `subset_iff` gives the corresponding reusable containment
+criterion; `CandidateConstruction.exists_candidate` and `candidate_spec` construct
+mathematical candidates without records. `support_unique` identifies candidates
+for inputs related by `SameTraversal`, including subdivisions and zero-valued
+parts. `containment` follows the paper's `claim:containment` induction, and
+`candidate_contains_envyFree_allocation` restores the original agent and piece
+labels. `extension_eq` is the envy-free extension consequence needed for compactness.
+
+`CandidateConstruction.run` constructs one guess using only recorded targets.
+`build_correct` retains the actual cap sequences for every processed position;
+`run_correct` proves existence, and `runs_spec` gives the guarantees for every
+legal execution. Each guess costs at most `(n+1) * n.choose 2` queries, preserves
+correct records and traversals, and realizes `IsCandidate`. `Result.allocation`
+restores agent labels when the inputs partition a cake.
+`runs_candidate_support` identifies execution outputs with the mathematical
+candidate, and `record_independent` compares executions from any two correct
+record states admitting the input traversals, even when the input interval lists
+are subdivided. `RWProtocol.Runs.unique` supplies result and query-count uniqueness
+from the model's unique legal answers. No nonempty-piece, positive-value, or
+normalization assumptions are used.
+
+Remaining Section 5 work is the proof-only approximate envy-free suffix
+construction, its containment of some candidate, and the compactness argument
+that some candidate succeeds. The complete Permute search, its whole-piece and
+indifference guarantees, and total query accounting must then be assembled.
 
 ## Checking
 
