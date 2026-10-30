@@ -9,7 +9,8 @@ set_option linter.style.header false
 
 The protocol and strong-induction argument of Section 2 (`algo:divide` and
 `thm: main theorem` in `paper/main.tex`). `DominateProtocol.Correct` is an
-explicit hypothesis; the domination subroutine remains to be implemented.
+explicit hypothesis here, discharged by `DominateAssembly.protocol_correct`
+when assembling the unconditional theorem in `Main.lean`.
 -/
 
 @[expose] public section

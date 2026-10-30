@@ -1,6 +1,6 @@
 # cake-cutting-psomas
 
-A Lean formalization in progress of Alexandros Psomas's
+A Lean formalization of Alexandros Psomas's
 *Cutting a Cake For Human Consumption: An Elementary n-agent Cake Cutting Protocol*.
 The original TeX source is in [paper/main.tex](paper/main.tex).
 
@@ -12,5 +12,5 @@ Sections 2–5's `Divide`, `Dominate`, `Core`, `Repair`, and `Permute` protocols
 The explicit bound is `2^{O(n log n)}`.
 
 Run `lake build` to check the project using the pinned Lean and mathlib versions.
-See [the formalization guide](docs/formalization.md) for the statement, file map,
-and proof status.
+See [the formalization guide](docs/formalization.md) for the paper-to-Lean theorem
+map, modeling conventions, and verification instructions.

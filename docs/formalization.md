@@ -1,647 +1,96 @@
 # Formalization guide
 
-## Target statement
+The main theorem of [the paper](../paper/main.tex), its subroutines, and its
+asymptotic query bound are proved. Import `CakeCuttingPsomas` for the complete
+development. All declaration names below are in the `CakeCuttingPsomas` namespace.
 
-For each positive number `n` of agents, there exists one Robertson–Webb protocol
-that works for every profile of normalized, nonnegative integrable densities on
-`[0,1]`. It returns pairwise disjoint finite unions of intervals whose union is
-the whole cake and which form an envy-free allocation. It uses at most
-`2 * 32^n * n^7 * (n!)^2` queries.
+## Final statements
 
-This is the initial normalized unit-cake instance of the main theorem in Section 2.
-`exists_bounded_envy_free_protocol` proves this unconditionally.
-It specializes `exists_bounded_envy_free_protocol_on_piece`, which works on any
-ordered cake compatible with supplied correct inherited records, including empty
-cakes and unnormalized or zero valuations. The protocol is chosen before the
-valuations. The query bound counts the call using those records; it does not
-include preparing the records for an arbitrary starting cake.
-`exists_bounded_envy_free_protocol_of_dominate` proves the same conclusion from
-an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
-Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
-from correct Core and Repair protocols. The resulting
-`exists_bounded_envy_free_protocol_of_core_repair` has the same conclusion and
-query bound. Section 4's Core and Repair constructions satisfy their contracts
-conditional on correct Permute. `exists_bounded_envy_free_protocol_of_permute`
-reduces the same target to a correct Permute implementation.
-Section 5's `PermuteAssembly.protocol_correct` supplies that implementation,
-closing the unconditional theorem with the same explicit bound.
-`exists_asymptotically_bounded_envy_free_protocol` derives the paper's
-`2^{O(n log n)}` corollary, with a constant and threshold independent of the
-agent count and valuation profile.
+For every positive number `n` of agents, one Robertson–Webb protocol works for
+all profiles of normalized, nonnegative integrable densities on `[0,1]`. It
+returns a complete envy-free allocation into pairwise disjoint finite unions
+of intervals, using at most `2 * 32^n * n^7 * (n!)^2` queries. The protocol is
+chosen before the valuation profile.
 
-## Files and definitions
+`exists_bounded_envy_free_protocol_on_piece` gives the same bound for any ordered
+cake compatible with supplied correct inherited records, including empty cakes
+and unnormalized or zero valuations. Preparing records for an arbitrary starting
+cake is outside that query budget. The normalized unit-cake instance starts with
+correct records for free, as in Section 1.3 of the paper.
 
-- `CakeCuttingPsomas/Basic.lean`: ordered interval pieces, density-based
-  valuations, partial allocations, residue, completeness, envy-freeness,
-  domination, and dominated groups; support measurability and containment,
-  disjoint piece concatenation, and basic residue properties.
-- `CakeCuttingPsomas/Piece.lean`: exact interval splitting, ordered piece
-  subtraction, and construction of residue pieces.
-- `CakeCuttingPsomas/Cut.lean`: continuity of cumulative interval value,
-  endpoint-equivalent values, smallest interval cuts, unique legal Cut answers,
-  and their connection to geometric interval prefixes.
-- `CakeCuttingPsomas/Prefix.lean`: ordered prefixes and suffixes parameterized
-  by traversal length, exact partition and nesting, continuity of values,
-  and existence of smallest prefixes.
-- `CakeCuttingPsomas/Valuation.lean`: integrability on subsets of the unit cake,
-  nonnegativity, monotonicity, and disjoint-union additivity of values.
-- `CakeCuttingPsomas/Allocation.lean`: combination with an allocation from the
-  residue, its exact residue formula, and preservation of envy-freeness and
-  domination; dominated-group completion and extension of recursive allocations
-  to the original agents.
-- `CakeCuttingPsomas/Protocol.lean`: legal Eval/Cut answers, query protocols,
-  sequencing, result mapping, agent relabeling, and execution lemmas with exact
-  additive query counts.
-- `CakeCuttingPsomas/Recorded.lean`: shared cell partitions, recorded values,
-  their correctness and piece compatibility, refinement, restriction to
-  participating agents, and cell-based residue construction.
-- `CakeCuttingPsomas/Traversal.lean`: traversal-preserving subdivision, inherited
-  ordered representations, and nonempty bands between distinct prefix positions.
-- `CakeCuttingPsomas/RecordedProtocol.lean`: Eval protocols and the
-  Eval-and-subtraction update after a cut, costing at most one Eval per agent.
-- `CakeCuttingPsomas/PrefixProtocol.lean`: smallest-prefix cuts using recorded
-  values, with correctness, inherited representations, and the `n + 1` query bound;
-  terminal prefix cuts with the chooser's prefix value in at most two queries.
-- `CakeCuttingPsomas/Suffix.lean`: exact nested suffixes, suffix traversal under
-  subdivision, minimal value-cap trims, preservation of all feasible suffixes
-  through successive caps, and the last actual trim's equality witness.
-- `CakeCuttingPsomas/SuffixProtocol.lean`: recorded cap trimming along an inherited
-  traversal, with canonical original-piece suffixes and at most `n + 1` queries.
-- `CakeCuttingPsomas/Candidate.lean`: record-independent candidates for fixed
-  orders, existence, greatest-feasible-suffix characterization, uniqueness through
-  subdivision, the paper's containment claim, and envy-free extension equality.
-- `CakeCuttingPsomas/CandidateProtocol.lean`: one recorded candidate construction,
-  its cap sequences and query bound, conversion back to labelled allocations,
-  and bundle-support independence across correct record states.
-- `CakeCuttingPsomas/BaseCases.lean`: the one- and two-agent branches of `Divide`,
-  complete and envy-free on arbitrary input pieces, using zero and at most two queries.
-- `CakeCuttingPsomas/QueryBound.lean`: the domination cost, cumulative recursive
-  cost, the paper's explicit bound, and its elementary upper bound `n^(11n)`.
-- `CakeCuttingPsomas/Asymptotics.lean`: logarithmic Big-O and explicit base-two
-  bounds witnessing `queryBound n ∈ 2^{O(n log n)}`.
-- `CakeCuttingPsomas/Dominate.lean`: the domination protocol interface and its
-  correctness specification, including records for the recursive residue.
-- `CakeCuttingPsomas/RecordedAllocation.lean`: shared partial-allocation outputs
-  and inherited-record guarantees for Section 3's subroutines.
-- `CakeCuttingPsomas/RecordedPreparation.lean`: current-cell representations and
-  recorded support values, allocation transport, and preparation of Repair inputs
-  after refinement, with unchanged query counts.
-- `CakeCuttingPsomas/Core.lean`: the Core protocol contract and the cutter's
-  residue contraction lemma.
-- `CakeCuttingPsomas/Permute.lean`: the Permute contract, including suffix
-  assignment, a whole-piece recipient, the indifference property, and query cost.
-- `CakeCuttingPsomas/PermuteProtocol.lean`: Section 5's finite recorded candidate
-  search, complete Permute correctness, and total query accounting.
-- `CakeCuttingPsomas/EqualPartition.lean`: recorded equal partitioning with
-  exact coverage, disjointness, equal cutter values, and at most `n-1` prefix cuts.
-- `CakeCuttingPsomas/CoreProtocol.lean`: Section 4's Core construction and its
-  full correctness contract, conditional only on correct Permute.
-- `CakeCuttingPsomas/TraversalPartition.lean`: shared mathematical pooled-mark
-  geometry, exact consecutive cells, and equal-share value bounds.
-- `CakeCuttingPsomas/FineCells.lean`: proof-only finite consecutive partitions
-  with an absolute cell-value bound for all agents, including empty pieces and
-  unnormalized or zero valuations; boundary suffixes and preceding-cell enlargement.
-- `CakeCuttingPsomas/EnvyCycle.lean`: proof-only labelled boundary suffix states,
-  strict envy cycles, priority-respecting rotations and enlargements, exact support
-  changes, and preservation of approximate envy-freeness.
-- `CakeCuttingPsomas/EnvyCycleTermination.lean`: lexicographic finite termination,
-  reachable terminal states, and a whole-piece recipient for nonempty agent sets.
-- `CakeCuttingPsomas/ApproximateSuffix.lean`: terminal approximate envy-free suffix
-  allocations with an acyclic envy graph and incoming envy for every proper suffix.
-- `CakeCuttingPsomas/CandidateExtension.lean`: topological agent orders, containment
-  of candidates in terminal suffix allocations, and a δ-envy-free suffix extension
-  of some candidate for every positive δ.
-- `CakeCuttingPsomas/CandidateCompactness.lean`: compact boxes of suffix extensions,
-  continuous maximum envy, positive minimum extension envy for failed candidates,
-  and existence of an envy-free guess by the paper's compactness argument.
-- `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
-  pooled equal-value marks on one traversal, exact coverage and disjointness,
-  cell counts and value bounds, and recorded-query accounting.
-- `CakeCuttingPsomas/RepairRoundRobin.lean`: deterministic recorded round robin,
-  turn availability, disjoint picks, cross-round comparison, half-residue and
-  strict last-pick bounds, and ordered chosen pieces with addition value bounds.
-- `CakeCuttingPsomas/RepairLevels.lean`: ordered enlarged bundles, suffix levels,
-  higher-level preference, and preservation of every old bundle by a correct
-  Permute call, using its whole-piece and indifference guarantees.
-- `CakeCuttingPsomas/RepairProtocol.lean`: Section 4's assembled Repair protocol,
-  retained additions, inverse assignment, transport to the original cake, exact
-  recorded residue, and full correctness conditional only on correct Permute.
-- `CakeCuttingPsomas/Repair.lean`: the Repair protocol contract, additions and
-  bundle permutation, old-bundle containment, and exact residue formula.
-- `CakeCuttingPsomas/DominateChoice.lean`: Section 3's choice lemma for the
-  geometric scale, two agents, and bundle permutation.
-- `CakeCuttingPsomas/DominateRepair.lean`: Section 3's post-Repair advantage
-  for the distinguished agent over the reassigned distinguished bundle.
-- `CakeCuttingPsomas/DominateProgress.lean`: inheritance of dominations after
-  shrinking, strict domination-count progress, and the `n²` bound on the total.
-- `CakeCuttingPsomas/DominateShrinking.lean`: recorded shrinking loop, preservation
-  of bundle advantages and containments, geometric contraction, logarithmic
-  stopping bound, and integration with domination-count progress.
-- `CakeCuttingPsomas/DominateTermination.lean`: completed outer-iteration relation,
-  preserved loop invariants, well-founded termination, and the `n²` bound on
-  non-returning iterations, conditional on branch availability.
-- `CakeCuttingPsomas/DominateSearch.lean`: finite recorded-value searches for a
-  dominated group and the geometric scale, agents, and permutation.
-- `CakeCuttingPsomas/DominateCost.lean`: total Section 3 query accounting,
-  including the final returning Core call, and the explicit Dominate bound.
-- `CakeCuttingPsomas/DominateProtocol.lean`: the assembled outer query protocol,
-  branch availability, and correctness conditional only on Core and Repair.
-- `CakeCuttingPsomas/Divide.lean`: the recursive protocol, termination, correctness,
-  and query bound, conditional on a correct domination protocol.
-- `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
-  Dominate, Core and Repair, Permute and Repair, or Permute alone, and the
-  unconditional general-input and unit-cake main theorems and asymptotic corollary.
-- `CakeCuttingPsomas.lean`: imports the complete development.
+## Paper-to-Lean theorem map
 
-`Fin n` represents the agents using indices from zero through `n - 1`.
-An allocation includes proofs that its bundles lie in the input cake and are
-pairwise disjoint. Completeness and envy-freeness are separate predicates.
-Piece lists preserve the interval order needed for later prefix/suffix operations.
-Stored intervals have strictly positive length. Intervals ending at 1 include
-that endpoint; other intervals are half-open. Empty pieces use an empty list,
-so `{1}` is not a standalone component. Splitting at either endpoint produces
-empty/whole or whole/empty, including at 1. This makes the paper's degenerate
-endpoint convention explicit and keeps pieces closed under subtraction.
-Positive length does not require positive value. Completeness uses exact sets,
-rather than equality up to measure zero.
+The assembly follows `Divide → Dominate → Core / Repair → Permute`. Intermediate
+correctness theorems take explicit subroutine contracts; the final theorems in
+`Main.lean` discharge all of them using the constructed implementations.
 
-Values are Lebesgue integrals of the given densities. Integrability and
-nonnegativity are assumptions; additivity and monotonicity are proved from them.
-Query values use closed intervals. `Valuation.value_Icc_eq_Ico` proves that
-these have the same values as half-open intervals for density valuations.
-`Valuation.exists_smallest_cut` proves interval-cut existence, including flat
-regions, and `RWQuery.existsUnique_cut_answer` proves that every legal Cut query
-has a unique valid answer. `RWQuery.cut_answer_before` connects such answers
-to the corresponding geometric interval prefixes.
+| Paper result or argument | Lean declaration(s) | Source |
+| --- | --- | --- |
+| §1.3: smallest Cut answers and prefix cuts | `RWQuery.existsUnique_cut_answer`; `RecordedState.prefixCut_runs` | [Cut](../CakeCuttingPsomas/Cut.lean), [PrefixProtocol](../CakeCuttingPsomas/PrefixProtocol.lean) |
+| §2: dominated-group completion | `Allocation.complete_envyFree_combineRecursive` | [Allocation](../CakeCuttingPsomas/Allocation.lean) |
+| §2: Divide correctness and explicit query bound | `RWProtocol.divide_runs_bounded` | [Divide](../CakeCuttingPsomas/Divide.lean) |
+| §2: main theorem, arbitrary compatible cake | `exists_bounded_envy_free_protocol_on_piece` | [Main](../CakeCuttingPsomas/Main.lean) |
+| §2: main theorem, normalized unit cake | `exists_bounded_envy_free_protocol` | [Main](../CakeCuttingPsomas/Main.lean) |
+| §2: `2^{O(n log n)}` bound | `log_queryBound_isBigO`; `exists_asymptotically_bounded_envy_free_protocol` | [Asymptotics](../CakeCuttingPsomas/Asymptotics.lean), [Main](../CakeCuttingPsomas/Main.lean) |
+| §3: choice of scale, agents, and permutation | `DominateChoice.exists_choice` | [DominateChoice](../CakeCuttingPsomas/DominateChoice.lean) |
+| §3: domination-count progress and termination | `DominateTermination.Iteration.progress`; `DominateTermination.trace_bound` | [DominateTermination](../CakeCuttingPsomas/DominateTermination.lean) |
+| §3: Dominate lemma, including query bound | `DominateAssembly.protocol_correct`; `DominateCost.totalBudget_le` | [DominateProtocol](../CakeCuttingPsomas/DominateProtocol.lean), [DominateCost](../CakeCuttingPsomas/DominateCost.lean) |
+| §4: Core lemma | `CoreAssembly.protocol_correct` | [CoreProtocol](../CakeCuttingPsomas/CoreProtocol.lean) |
+| §4: Repair lemma | `RepairAssembly.protocol_correct` | [RepairProtocol](../CakeCuttingPsomas/RepairProtocol.lean) |
+| §5: candidate construction and containment claim | `CandidateConstruction.runs_spec`; `IsCandidate.containment` | [CandidateProtocol](../CakeCuttingPsomas/CandidateProtocol.lean), [Candidate](../CakeCuttingPsomas/Candidate.lean) |
+| §5: approximate suffix allocation by envy-cycle elimination | `EnvyCycle.exists_terminal_allocation` | [ApproximateSuffix](../CakeCuttingPsomas/ApproximateSuffix.lean) |
+| §5: terminal allocation contains a candidate | `EnvyCycle.State.Terminal.contains_candidate` | [CandidateExtension](../CakeCuttingPsomas/CandidateExtension.lean) |
+| §5: some candidate is envy-free, by compactness | `CandidateConstruction.exists_envyFree_guess` | [CandidateCompactness](../CakeCuttingPsomas/CandidateCompactness.lean) |
+| §5: Permute lemma, both additional guarantees and query bound | `PermuteAssembly.protocol_correct` | [PermuteProtocol](../CakeCuttingPsomas/PermuteProtocol.lean) |
 
-The theorem chooses the protocol before quantifying over valuations. A protocol
-can branch on query answers, but cannot inspect the densities directly. `Runs`
-requires each query to be legal and each answer to be correct; Cut answers must
-be the smallest valid cut point. Thus the query bound counts actual requests,
-rather than an arbitrary number attached to an allocation. The model permits
-arbitrary internal computation on exact real answers, as an abstract query model;
-it does not provide an executable implementation.
+## Modeling conventions
 
-## Proof status
+- **Pieces and endpoints.** A `Piece` stores an ordered list of disjoint intervals;
+  traversal order need not be spatial order. Intervals have positive length and
+  are half-open, except those ending at `1`, which include that endpoint. Empty
+  pieces use the empty list; `{1}` is not a standalone component. Endpoint splits
+  give empty/whole or whole/empty pieces. Completeness is exact set equality,
+  including endpoints.
+- **Valuations.** Values are Lebesgue integrals of nonnegative integrable densities.
+  Normalization is a separate predicate. Positive length need not mean positive
+  value. Recursive calls allow unnormalized and zero valuations; Repair retains
+  the paper's positive-residue and epsilon hypotheses.
+- **Inherited records.** `RecordedState` stores cell geometry and values, with
+  correctness relative to a valuation profile stated separately. Refinements
+  preserve representations of earlier pieces, sometimes by subdividing their
+  interval lists. A prefix cut costs at most `n + 1` queries, including record
+  updates. Bundle and residue values are computed from records.
+- **Query model.** `RWProtocol` branches only on query answers; it cannot inspect
+  densities. `Runs` checks query legality and answer correctness, counting each
+  Eval or Cut once. Cuts return the smallest valid point, including in flat
+  regions. Internal computation on exact real answers is free; the development
+  proves an abstract query protocol and does not provide an executable program.
+  Fine partitions, envy-cycle elimination, and compactness in Section 5 are used
+  only to prove that Permute's finite search succeeds and incur no protocol queries.
 
-Basic support measurability and valuation properties are established.
-`Allocation.combine X Y hY` appends each agent's interval lists, where
-`hY : Y.allocated ⊆ X.residue`. Both allocations have the same input cake and
-agent type. The new residue is exactly `X.residue \ Y.allocated`.
-`envyFree_combine` requires both allocations to be envy-free;
-`dominates_combine` preserves each old domination without that requirement.
+## Verification
 
-Section 2's dominated-group completion argument is proved:
-`envyFree_combine_dominatedGroup` only requires the added allocation to be
-envy-free within the dominated group and empty outside it. This works even for
-partial allocations of the residue. `complete_combine` gives completeness when
-the added allocation fills exactly the residue; the combined result is
-`complete_envyFree_combine_dominatedGroup`.
+Run `lake build` from the repository root. The Lean version is pinned in
+[lean-toolchain](../lean-toolchain), and the mathlib revision in
+[lakefile.toml](../lakefile.toml).
 
-For a recursive result `Y : Allocation m R`, `Y.extendTo e hRC` relabels agents
-using `e : Fin m ≃ E`, gives `Piece.empty` to outsiders, and regards the bundles
-as subsets of the original cake via `hRC : R.support ⊆ C.support`. It preserves
-allocated support and envy-freeness within `E`.
-`X.combineRecursive Y e hR` combines this extension with `X`, given
-`hR : R.support = X.residue`. The theorem
-`complete_envyFree_combineRecursive` proves completeness and envy-freeness from
-the corresponding recursive guarantees, envy-freeness of `X`, and domination
-of `E`. These results do not require normalized or strictly positive values.
+To audit dependencies, save the following as `/tmp/cake-cutting-audit.lean` and
+run `lake env lean /tmp/cake-cutting-audit.lean` from the repository root:
 
-`CakeInterval.before` and `after` split an interval with exact disjointness
-and coverage. `CakeInterval.diff` leaves at most two components.
-`Piece.diff P Q` represents exactly `P.support \ Q.support`, preserving the
-order of `P`'s components and the left-to-right order of surviving fragments
-within each component. It does not globally sort or merge components.
+```lean
+import CakeCuttingPsomas
 
-`X.residuePiece` constructs a `Piece` with support exactly `X.residue` by
-subtracting the bundle intervals from the input cake. No valuation queries are
-needed. `X.combineResidue Y e` and `complete_envyFree_combineResidue` specialize
-the recursive adapter to this constructed residue, removing the separate
-representation obligation. The set-valued residue remains the interface for
-valuation and domination statements.
+#print axioms CakeCuttingPsomas.PermuteAssembly.protocol_correct
+#print axioms CakeCuttingPsomas.CoreAssembly.protocol_correct
+#print axioms CakeCuttingPsomas.RepairAssembly.protocol_correct
+#print axioms CakeCuttingPsomas.DominateAssembly.protocol_correct
+#print axioms CakeCuttingPsomas.exists_bounded_envy_free_protocol_on_piece
+#print axioms CakeCuttingPsomas.exists_bounded_envy_free_protocol
+#print axioms CakeCuttingPsomas.exists_asymptotically_bounded_envy_free_protocol
+```
 
-`P.prefixAt s` traverses the specified interval list by geometric length,
-independently of spatial order; `P.suffixAt s` is its exact remainder.
-Positions zero and `P.length` give empty/whole and whole/empty. Prefixes are
-nested, suffixes are nested in reverse, and their values are continuous.
-`Valuation.exists_smallest_prefix` gives the first position attaining every
-legal target; `exists_least_prefix` gives containment in every prefix with the
-same value. A target of zero selects the empty prefix, and a full-value target
-may leave a zero-valued suffix. No normalization or positive-value assumption
-is used. These mathematical existence results are complemented by the recorded-value
-query protocol described below.
+These declarations depend only on `propext`, `Classical.choice`, and `Quot.sound`.
+The development has no `sorry` placeholders or project-specific axioms.
 
-`RWProtocol.bind` sequences protocols; `runs_bind_iff` splits executions with
-additive counts. Result mapping and agent relabeling preserve counts. To embed a
-recursive protocol on `Fin m` into the original agents, use the map
-`fun i ↦ (e i).val` induced by `e : Fin m ≃ E`, and restrict the recorded state
-along the same map.
-
-`RecordedState` stores a shared partition of the unit cake and a table of real
-cell values. `Correct` relates that table to valuations; valuations are absent
-from the protocol data. `Compatible` pieces list cells in their own traversal
-order. `pieceValue_eq` proves that their values are sums of records. The initial
-normalized state costs no queries. Restriction to participating agents retains
-correctness and compatible pieces, without normalization assumptions.
-
-`recordCut` refines an interior cell using one Eval per participating agent and
-subtraction for the other fragment; boundary points leave records unchanged.
-`refinePiece` subdivides old representations while preserving their support and
-interval order. `Refines` states that old pieces remain representable by new
-cells; `Represents` records existence of a compatible representation of a set.
-After a split, old interval lists may require subdivision before reuse.
-`allocationResidue` filters out allocated cells from a compatible input cake,
-preserving its traversal order. Its support is exactly the allocation's residue,
-and `allocationResidue_value` recovers its value from existing records.
-
-`prefixCut` scans recorded values, makes at most one Cut query, and updates the
-records. `prefixCut_runs` proves smallest-prefix correctness, correct updated
-records, preservation of old represented pieces, representability of both output
-pieces, and at most `n + 1` queries. It handles empty input, zero targets, zero-valued
-components, and flat regions without extra assumptions.
-
-The one- and two-agent cases of Section 2 are proved. `RWProtocol.divideOne`
-gives the whole input cake to its sole agent; `divideOne_runs` proves completeness,
-envy-freeness, and exactly zero queries, without needing records.
-`RWProtocol.divideTwo` implements cut-and-choose on an arbitrary compatible
-ordered piece; `divideTwo_runs` proves completeness, envy-freeness, and at most
-two queries from correct inherited records. Neither requires normalization,
-positive values, or a nonempty cake.
-
-`RecordedState.terminalPrefix` locates the smallest prefix from the cutter's
-records, using at most one Cut and one Eval of the chooser's split fragment.
-Whole preceding components use recorded values; subtraction gives the chooser's
-suffix value. A zero target returns the empty prefix without queries, including
-when the input cake is empty or has zero value to the cutter. The terminal
-protocol returns only the allocation, so records need not be refreshed.
-
-Section 2's full reduction is proved conditional on `Dominate`.
-`DominateResult` contains a partial allocation, a group, updated records, and an
-exact residue piece. `DominateProtocol.Correct` requires a legal execution with
-an envy-free allocation, a nonempty proper dominated group, correct output
-records, a compatible residue, and at most `dominateQueryBound n` queries.
-The protocol family is chosen independently of valuations. Its existence is
-not postulated as an axiom.
-
-`RWProtocol.divide` branches to the proved base cases or calls `Dominate`,
-restricts records and relabels agents for recursion, then combines allocations.
-A group-size guard ensures that recursion decreases even on arbitrary answer
-branches; the domination guarantee supplies the size bounds in valid executions.
-`divide_runs` proves completeness and envy-freeness using strong induction and
-`complete_envyFree_combineRecursive`, with cost at most `divideQueryCost n`.
-For `n ≥ 2` this is `2 + ∑ m ∈ Finset.Icc 3 n, dominateQueryBound m`; for zero
-or one agent it is zero. `divideQueryCost_le_queryBound` bounds the sum using
-geometric growth of domination costs. `divide_runs_bounded` gives the explicit
-bound for arbitrary compatible cakes and unnormalized or zero valuations.
-The conditional theorem in `Main.lean` specializes this protocol to the free
-initial normalized records and the unit cake.
-
-Section 3's subroutine interfaces are specified by `CoreProtocol.Correct` and
-`RepairProtocol.Correct`; neither asserts that an implementation exists.
-`RecordedAllocationResult` packages an allocation, updated records, and an exact
-residue piece. Its `Inherits` guarantee preserves representations of earlier
-pieces through `RecordedState.Refines`, records all output bundles, and makes
-the residue compatible for the next call. Earlier interval lists may need
-subdivision after refinement.
-
-Core's contract includes envy-freeness, the cutter's exact `1/n` share, and the
-`coreQueryBound n = n^3 (n!)^2` cost. `cutter_residue_le` derives the cutter's
-`(n-1)/n` residue contraction from the share equality, including zero-valued and
-empty inputs. Repair's contract retains the paper's epsilon, positive-residue,
-and almost-envy-free hypotheses. It returns a permutation `σ` and disjoint
-additions `Z_j` from the old residue, with output bundle `σ(j)` equal in support
-to `D_j ∪ Z_j`. The contract bounds each addition's value and requires the query
-count to be at most `n/ε + coreQueryBound n`, expressed over the reals.
-`old_bundle_subset` and `residue_removed` prove the corresponding containment
-and exact residue identities from the output data.
-
-Section 3's choice lemma (`lem:alpha pi exist for dominate`) is proved as
-`DominateChoice.exists_choice`. Its hypotheses are an envy-free old allocation,
-an envy-free allocation of its represented residue with Core's exact cutter
-share, and absence of a dominated group after combining them. It concludes
-positive new residue value for every agent and witnesses satisfying (S1)--(S3),
-with `α = DominateChoice.scale n t` and `2 ≤ t ≤ n+1`. The proof establishes
-strong connectivity of the old non-domination graph using reachable sets,
-the cutter's normalized gap sum and `1/(n-1)` average bound, and the paper's
-two cases. The small-edge case uses finite counting to find an empty geometric
-band and `List.formPerm` to cycle a simple directed path. This is a mathematical
-existence theorem; `DominateSearch.choice_available` connects its witnesses to
-the finite search over inherited records.
-
-The Repair call's mathematical preconditions in Section 3's proof of
-`lem: dominate` are proved by `DominateChoice.Spec.repair_preconditions`.
-`permutedCombined` constructs the allocation with bundles `X_i ∪ Y_{π(i)}`
-using the existing allocation adapters, with exact residue `Y.residue`.
-Envy-freeness of `X` and `Y` and (S2) give almost envy-freeness; the scale's
-exponent lower bound gives `0 < α ≤ (4n²)⁻² < 1/(6n³)`. Positive residue
-values are inherited from the choice lemma. `RepairProtocol.onRepresented`
-prepares a compatible representation of the ambient cake, invokes Repair, and
-transports its output back to the original cake representation at no query cost.
-
-Section 3's immediate post-Repair advantage is proved by
-`DominateChoice.Spec.postRepair_advantage`: Repair's envy-free output and
-addition bounds, together with (S2)--(S3) and envy-freeness of `X`, give
-`Vᵢ(Wᵢ) - Vᵢ(W_{σ(j)}) ≥ (n² - 1) α Vᵢ(U)` for the distinguished agents.
-`RepairResult.value_bundle` gives exact value additivity for each reassigned
-bundle. `Spec.postRepair_strict_advantage` proves positivity and `i ≠ σ(j)`
-when `n ≥ 3` and `Vᵢ(U) > 0`.
-
-`Allocation.advantage_le_combine` proves that each envy-free addition preserves
-bundle advantages. `DominateChoice.Spec.progress_after_shrinking` proves progress
-for a final envy-free extension satisfying the paper's bundle containments,
-preservation of the post-Repair advantage, and final residue bound. Old
-dominations transfer through `σ`; every domination count is nondecreasing,
-and the distinguished count and their sum increase by at least one.
-`Allocation.dominatedAgents`, `dominationCount`, and `totalDominationCount`
-include self-indices exactly when the paper's domination inequality holds.
-`totalDominationCount_le_sq` bounds the total by `n²`.
-
-`DominateShrinking.run` implements the inner shrinking loop with bounded fuel,
-using recorded residue values for its stopping checks. Conditional on
-`CoreProtocol.Correct`, `run_correct` proves envy-freeness, preservation of all
-bundle advantages and bundle containments, inherited records, and contraction
-by `(1 - 1/n)^k` in the actual number `k` of Core calls. `shrink_correct` proves
-the stopping threshold within `⌈n log(1/α)⌉₊` calls and at most that many times
-`coreQueryBound n` queries. These results allow empty and zero-valued residues.
-`budget_scale_le` supplies the paper's uniform bound
-`⌈n(n+1) log(4n²)⌉₊`. `Spec.shrinking_progress` starts from Repair's output and
-supplies all extension hypotheses of `progress_after_shrinking`, proving strict
-domination-count progress for the resulting legal execution.
-
-`DominateTermination.PreparedIteration` packages an actual initial Core execution,
-the failed dominated-group test, a valid choice, and an actual Repair execution
-with their correctness guarantees. `PreparedIteration.complete` finishes shrinking
-conditional on Core's contract. `Iteration` retains that shrinking execution and
-its extension guarantees; `Iteration.progress` derives the strict measure increase
-and preserves the loop invariants. No progress inequality is assumed as a field.
-
-For a trace of `k` completed non-returning iterations, `trace_progress` and
-`trace_bound` prove `μ(X₀) + k ≤ μ(Xₖ)` and `k ≤ n² - μ(X₀) ≤ n²`.
-Here `μ` is `totalDominationCount`; its initial value is not assumed to be zero.
-The remaining-capacity measure `n² - μ(X)` strictly decreases, yielding
-`wellFounded` and `no_infinite_continuations`. `terminates_of_prepared` proves a
-return within that bound when each reachable iteration can return or prepare
-Core, choice, and Repair. This theorem keeps branch availability explicit;
-`DominateAssembly.step_correct` discharges it in the actual query protocol.
-`reachable_invariants` and `Returns.output` give correct inherited records,
-envy-freeness, and a dominated group for the returning allocation.
-`outer_iteration_bound` allows the final returning iteration, giving at most
-`n² + 1` outer iterations (and initial Core calls), and at most `n²` Repair calls.
-Shrinking Core calls are counted separately.
-
-Section 3's protocol construction is complete conditional on Core and Repair.
-`RecordedState.represent` selects current cells contained in an old support;
-`support_represent` proves exact coverage whenever that support is represented.
-`supportValue_eq` recovers its value from the table. This handles old bundles
-whose interval lists are no longer compatible after refinement. Rebuilding the
-ambient cake for Repair does not change the bundles' traversal orders.
-
-`DominateSearch.group` searches all finite agent subsets and
-`DominateSearch.choice` searches bounded exponents, agent pairs, and permutations.
-Their predicates contain no valuations. Soundness identifies their recorded tests
-with the paper's domination inequality and (S1)--(S3); completeness connects failed
-group tests to `exists_choice`. Both searches are free internal computation.
-
-`DominateAssembly.step_correct` retains actual Core, prepared Repair, and
-shrinking executions in `DominateTermination.Iteration`. The shrinking threshold
-uses the recorded value of the initial Core residue, saved before Repair.
-`run_correct` uses `n² + 1` outer-loop fuel and the existing remaining-capacity
-measure to exclude exhaustion on legal executions. Arbitrary answer branches
-have total fallback behavior; no correctness guarantees are claimed for them.
-`protocol_correct` proves `DominateProtocol.Correct` from `CoreProtocol.Correct`
-and `RepairProtocol.Correct`, without a separate branch-availability assumption.
-
-`DominateCost.totalBudget` counts one final Core call plus at most `n²`
-continuations, each consisting of Core, Repair, and bounded shrinking.
-`totalBudget_le` proves the paper's explicit bound `32^n n^7 (n!)²`, using
-Mathlib's Stirling lower bound and a loose polynomial estimate for the logarithm.
-Repair's real-valued query inequality is bounded by an integer budget without
-adding a rounding cost.
-
-Section 4's Core reduction is proved. `PermuteProtocol.Correct` specifies all of
-`lem:permute`, including its indifference property (ii), without asserting an
-implementation exists. Input labels are retained even for empty pieces. The
-prefix-cut bound is converted to Robertson--Webb queries using the `n+1` cost.
-
-`EqualPartition.run` makes `n-1` prefix cuts with a fixed target computed from
-the cutter's inherited records, leaving the last piece whole. Its correctness
-theorem proves exact coverage, disjointness, equal cutter values, inherited
-representations, and at most `(n-1)(n+1)` queries. Current-cell representations
-of the remaining support supply compatible inputs after each refinement.
-Zero targets and empty cakes need no separate value assumptions.
-
-`CoreAssembly.protocol` follows equal partitioning with Permute.
-`protocol_correct` proves `CoreProtocol.Correct`: the cutter cannot value her
-suffix above an equal input piece, and envy-freeness prevents her from valuing
-it below the whole piece given to some agent. `query_cost_le` proves
-`(n+1)(n-1 + (n.choose 2)(n!)²) ≤ n³(n!)²` for `n ≥ 2`.
-
-Section 4's common residue partition for Repair is proved.
-`RepairPartition.run` collects each agent's `M-1` cumulative equal-value marks,
-where `M = ⌈1/(3nε)⌉₊`, on the input residue's fixed interval-list traversal.
-`TraversalRefines` and `representAlong` preserve every geometric prefix through
-record refinement. Pooled marks define consecutive paper cells, each potentially
-containing several inherited intervals. `run_correct` proves nonempty cells,
-exact coverage, pairwise disjointness, correct inherited records,
-`M ≤ cellCount ≤ n(M-1)+1 < 1/(2ε)`, value at most `Vᵢ(R)/M ≤ 3nεVᵢ(R)`,
-and at most `n(M-1)(n+1)` queries. `size_bounds` also gives `2n² ≤ M`.
-Cell supports are represented in the final state; use its recorded representation
-to read cell values without queries. Positivity and epsilon assumptions are
-exactly the relevant hypotheses of Repair; almost envy-freeness is not needed.
-
-Repair's recorded round robin is proved in `RepairRoundRobin`.
-`select` makes zero queries, choosing whole paper cells by recorded support
-values in fixed agent order for `n-1` rounds. Ties select the first maximizer
-in traversal order. `available_card` and `pick_spec` prove availability;
-`chosen_injective` and `chosen_disjoint` prove distinct, disjoint picks.
-`comparison` proves the paper's cross-round inequality. `available_half`
-preserves at least half of each observer's residue value throughout the run,
-and `pick_strict` gives value strictly above `ε Vᵢ(R)` for every pick by its
-chooser, including `Guarantees.last_pick`. The strict cell-count bound and
-positive residue values supply strictness. `bundle` concatenates each agent's
-cells in pick order, retains represented supports, and has value at most
-`3n(n-1)ε Vᵢ(R) ≤ 3n²ε Vᵢ(R)` to every observer. `retained_value_le` passes
-this bound to any retained portion. `run_correct` connects these guarantees
-directly to `RepairPartition.run_correct`, preserving its query bound and
-inherited records. Almost envy-freeness is not needed for this stage.
-
-Repair's levels argument is proved in `RepairLevels`.
-`Picks.input` concatenates chosen cells in round order before the old bundle;
-`ofRoundRobin_added` identifies its added cake with the existing round-robin
-bundle. The pieces are disjoint, represented by inherited records, and partition
-`Picks.cake`, which excludes unchosen residue. Cell-boundary suffixes bound any
-retained suffix between its complete trailing cells and at most one additional
-partial cell. `Picks.level` counts complete retained cells, or is `-1` when the
-old bundle is cut. `higher_levels_preferred` proves the paper's strict comparison
-for a gap of at least two levels. `missing_level` and
-`old_bundle_subset_of_preference` use envy-freeness, finite holder counting, and
-Permute's property (ii) to exclude level `-1`. `roundRobin_old_bundle_subset`
-supplies the preference hypotheses from the recorded selection and Repair's
-original assumptions. `roundRobin_permute_preserves` applies the existing Permute
-contract directly to that selection, retaining its execution, records, suffix,
-and query guarantees.
-The old bundle labelled `i` is retained by recipient `assignment.symm i`.
-
-Section 4's Repair assembly is proved in `RepairAssembly.protocol_correct`.
-`protocol P` prepares the recorded residue, partitions it, performs recorded
-round robin, and calls Permute on the ordered enlarged bundles. The returned
-permutation is `assignment.symm`; each addition is the retained bundle minus its
-old bundle. The allocation is transported to the original cake, and its residue
-is reconstructed from the final records, retaining unchosen cells as well as
-trimmings. `RepairResult.residue_removed` gives the exact identity
-`R_out = R \ ⋃ j, Z_j.support`. Record refinement and envy-freeness are preserved,
-and the additions satisfy the existing round-robin value bounds. Ceiling
-estimates give at most `n/ε + n³(n!)²` queries without rounding the real budget.
-Geometric guards provide unchanged outputs on invalid answer branches; valid
-executions satisfy all guards. No valuations occur in the construction.
-
-`exists_bounded_envy_free_protocol_of_permute` combines Core and Repair with
-Sections 2--3. Section 5's assembled Permute closes the unconditional theorem.
-The asymptotic bound `2^{O(n log n)}` is proved in `Asymptotics`.
-`queryBound_le_pow` uses `Nat.factorial_le_pow` to bound the explicit count by
-`n^(11n)` for `n ≥ 2`. `log_queryBound_isBigO` gives
-`log(queryBound n) = O(n log n)` at infinity, and `queryBound_le_two_rpow` gives
-the pointwise bound `queryBound n ≤ 2^((11 / log 2) n log n)` using natural logs.
-`exists_asymptotically_bounded_envy_free_protocol` combines this estimate with
-the unconditional protocol theorem, with constant `11 / log 2` and threshold 2.
-The exact-bound theorem still covers every positive agent count.
-
-Section 5's suffix-trimming toolkit is proved. `Piece.suffixAt_suffixAt` adds
-traversal positions with exact piece equality; `IsSuffix.trans` and
-`IsSuffix.of_support_subset` support repeated trims. `SameTraversal.suffixAt`
-preserves the remaining traversal through subdivision.
-`Valuation.IsCapTrim` specifies removal of the smallest prefix worth
-`max 0 (V(P) - cap)`, for a nonnegative cap. Its `preserves` theorem retains
-every suffix satisfying that cap, including unnecessary zero-valued cake.
-Satisfied caps, entirely zero-valued pieces, empty pieces, and repeated caps
-remove nothing. `CapTrimSequence` proves all processed caps hold, every original
-suffix satisfying them survives, and a proper final suffix has an equality
-witness from the last actual trim. These are the geometric facts preceding
-`eq:permute-caps` and used by the candidate construction and containment proof below.
-
-`RecordedState.prefixCut_runs_spec` exposes smallest-prefix minimality,
-traversal refinement, and compatibility of the remaining canonical suffix in
-one execution. `RecordedState.capTrim_runs` cuts a compatible subdivision
-internally and interprets the returned position on the original piece. Its
-output satisfies the existing exact `IsSuffix` predicate, and the remaining
-traversal has a compatible representation for the next trim. No valuations
-occur in the protocol definition; targets use inherited records.
-
-Permute's input contract now requires each specified traversal to admit a
-compatible current-cell representation (`SameTraversal`), rather than only
-represented support. `prefixCut_runs_spec` also exposes compatibility of its
-canonical prefix. Equal partitioning inherits traversals, represents remainders
-along their original traversal, and exports aligned outputs for Core's call.
-Repair internally aligns each selected paper cell and old bundle with current
-cells before concatenation, preserving the order of picks before the old bundle.
-Only old-bundle supports are prescribed by Repair's external contract. Both
-callers satisfy Permute's traversal precondition without extra queries or changes
-to Core and Repair's external guarantees.
-
-Section 5's fixed-order candidate milestone is proved.
-`IsCandidate` characterizes each bundle as the greatest suffix satisfying all
-earlier agents' caps. `subset_iff` gives the corresponding reusable containment
-criterion; `CandidateConstruction.exists_candidate` and `candidate_spec` construct
-mathematical candidates without records. `support_unique` identifies candidates
-for inputs related by `SameTraversal`, including subdivisions and zero-valued
-parts. `containment` follows the paper's `claim:containment` induction, and
-`candidate_contains_envyFree_allocation` restores the original agent and piece
-labels. `extension_eq` is the envy-free extension consequence needed for compactness.
-
-`CandidateConstruction.run` constructs one guess using only recorded targets.
-`build_correct` retains the actual cap sequences for every processed position;
-`run_correct` proves existence, and `runs_spec` gives the guarantees for every
-legal execution. Each guess costs at most `(n+1) * n.choose 2` queries, preserves
-correct records and traversals, and realizes `IsCandidate`. `Result.allocation`
-restores agent labels when the inputs partition a cake.
-`runs_candidate_support` identifies execution outputs with the mathematical
-candidate, and `record_independent` compares executions from any two correct
-record states admitting the input traversals, even when the input interval lists
-are subdivided. `RWProtocol.Runs.unique` supplies result and query-count uniqueness
-from the model's unique legal answers. No nonempty-piece, positive-value, or
-normalization assumptions are used.
-
-Section 5's proof-only discretization is proved in `FineCells.exists_partition`
-and `exists_partitions`. `CellPartition` stores finitely many interior traversal
-marks; its cells have exact coverage, pairwise disjointness, and nonempty supports.
-Empty pieces have no cells. For observer value `A`, subdivision uses
-`max 1 ⌈A/δ⌉₊` shares, so each pooled cell is worth at most `δ` without
-normalization. Zero-valued observers contribute no marks; nonempty pieces worth
-zero to everyone remain whole. `exists_preceding`, `cell_union_suffix`, and
-`value_suffix_step` support adjoining the immediately preceding cell to a boundary
-suffix. The mathematical construction has no recorded-state or protocol inputs
-and contributes no Permute queries. Repair reuses the extracted pooled-mark
-geometry through its existing public names.
-
-Section 5's proof-only approximate suffix construction is proved.
-`EnvyCycle.State` stores boundary positions by input label and a separate label
-assignment permutation, retaining empty labels through rotations. `Step` rotates
-a simple strict-envy cycle or, only when the graph is acyclic, enlarges an
-unenvied suffix by its preceding cell. Both preserve `DeltaEnvyFree`; rotations
-preserve allocated support, and enlargements add exactly one previously unallocated
-cell for disjoint inputs.
-
-`EnvyCycle.State.wellFounded` uses the lexicographic pair of remaining-cell count
-and finite assignment rank. Enlargements decrease the first component; rotations
-keep boundaries fixed and decrease the number of assignments with strictly greater
-total own value. There are at most `n!` such assignments, including when potential
-values coincide. Strict real-valued potential increase alone is not the termination
-argument. `exists_terminal_reachable` obtains a finite execution from every state;
-terminal states have an acyclic envy graph and incoming strict envy for each proper
-suffix. For positive agent counts, `Terminal.exists_whole` gives a whole-piece
-recipient. `EnvyCycle.exists_terminal_state` supplies fine partitions for every
-positive δ and reachability from the empty suffix assignment;
-`exists_terminal_allocation` exports the corresponding ordinary partial allocation.
-No normalization or positive-value hypotheses or protocol queries are required.
-
-Section 5's terminal candidate-containment milestone is proved.
-`exists_topological_order` orders any acyclic relation on `Fin n` so every edge
-points forward, using Mathlib's well-order extension and finite sorted enumeration.
-`EnvyCycle.State.Terminal.contains_candidate` follows the paper's induction:
-a proper terminal suffix has an earlier envious observer, whose candidate cap
-and induction hypothesis rule out reverse containment by suffix comparability.
-`EnvyCycle.exists_candidate_delta_extension` supplies, for every positive δ,
-orders, a candidate, and a δ-envy-free allocation extending that candidate by
-suffixes with the same input-label assignment. The orders may depend on δ.
-These proof-only results require no nonempty-agent or positive-value assumptions
-and use no protocol queries.
-
-Section 5's compactness argument is proved.
-`CandidateCompactness.extensionBox` parameterizes extensions by traversal positions
-between zero and the candidate's removed length. The box is nonempty and compact;
-`extension_coordinates` represents every suffix extension in it.
-`continuous_maxEnvy` proves continuity of the finite maximum of pairwise envy,
-using the existing suffix-value continuity. `exists_positive_extension_bound`
-uses `IsCandidate.extension_eq` to exclude envy-free extensions of failed
-candidates and the extreme value theorem to obtain a strictly positive bound.
-`CandidateConstruction.exists_envyFree_guess` takes the minimum over the finite
-set of order pairs and contradicts a δ-envy-free extension with δ half that minimum.
-Support uniqueness identifies the candidate provided by the extension theorem
-with the fixed mathematical candidate for that guess. The result includes empty
-agent sets, and requires no normalization or positive-value assumptions.
-
-Section 5's complete Permute assembly is proved.
-`PermuteAssembly.guesses` enumerates all `(n!)²` pairs of orders.
-`search` runs candidates sequentially on the original input pieces, retaining
-record refinements after failures; `passes` tests envy-freeness using only stored
-values. `search_correct` combines successful-guess existence with candidate support
-uniqueness to exclude exhaustion and bound the total query count.
-`CandidateConstruction.runs_last_trim` exposes the last actual trim's equality
-witness, and `Valid.indifference` uses the earliest member of a nonempty set of
-proper-suffix recipients to obtain an indifferent observer outside the set.
-`PermuteAssembly.protocol_correct` proves the full contract, including a whole-piece
-recipient, exact recorded residue, inherited records, and at most
-`(n+1) * n.choose 2 * (n!)²` queries. The protocol's guards depend only on geometry
-and records. No positive-value or normalization hypotheses are added.
-
-## Checking
-
-Run `lake build`. The development has no `sorry` placeholders.
-To audit theorem dependencies, import `CakeCuttingPsomas` in a temporary Lean file
-and run `#print axioms` on `CakeCuttingPsomas.PermuteAssembly.protocol_correct`,
-`CakeCuttingPsomas.exists_bounded_envy_free_protocol_on_piece`,
-`CakeCuttingPsomas.exists_bounded_envy_free_protocol`, and
-`CakeCuttingPsomas.exists_asymptotically_bounded_envy_free_protocol` with
-`lake env lean`. These use only `propext`, `Classical.choice`, and `Quot.sound`;
-none depends on `sorryAx` or a project-specific axiom.
+The [archived progress guide](archive/formalization-progress.md) preserves the
+former detailed file map and milestone notes for historical reference.
