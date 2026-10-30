@@ -88,6 +88,13 @@ be constructed in Section 5.
 - `CakeCuttingPsomas/FineCells.lean`: proof-only finite consecutive partitions
   with an absolute cell-value bound for all agents, including empty pieces and
   unnormalized or zero valuations; boundary suffixes and preceding-cell enlargement.
+- `CakeCuttingPsomas/EnvyCycle.lean`: proof-only labelled boundary suffix states,
+  strict envy cycles, priority-respecting rotations and enlargements, exact support
+  changes, and preservation of approximate envy-freeness.
+- `CakeCuttingPsomas/EnvyCycleTermination.lean`: lexicographic finite termination,
+  reachable terminal states, and a whole-piece recipient for nonempty agent sets.
+- `CakeCuttingPsomas/ApproximateSuffix.lean`: terminal approximate envy-free suffix
+  allocations with an acyclic envy graph and incoming envy for every proper suffix.
 - `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
   pooled equal-value marks on one traversal, exact coverage and disjointness,
   cell counts and value bounds, and recorded-query accounting.
@@ -542,10 +549,31 @@ suffix. The mathematical construction has no recorded-state or protocol inputs
 and contributes no Permute queries. Repair reuses the extracted pooled-mark
 geometry through its existing public names.
 
-Remaining Section 5 work is the proof-only approximate envy-free suffix
-construction, its containment of some candidate, and the compactness argument
-that some candidate succeeds. The complete Permute search, its whole-piece and
-indifference guarantees, and total query accounting must then be assembled.
+Section 5's proof-only approximate suffix construction is proved.
+`EnvyCycle.State` stores boundary positions by input label and a separate label
+assignment permutation, retaining empty labels through rotations. `Step` rotates
+a simple strict-envy cycle or, only when the graph is acyclic, enlarges an
+unenvied suffix by its preceding cell. Both preserve `DeltaEnvyFree`; rotations
+preserve allocated support, and enlargements add exactly one previously unallocated
+cell for disjoint inputs.
+
+`EnvyCycle.State.wellFounded` uses the lexicographic pair of remaining-cell count
+and finite assignment rank. Enlargements decrease the first component; rotations
+keep boundaries fixed and decrease the number of assignments with strictly greater
+total own value. There are at most `n!` such assignments, including when potential
+values coincide. Strict real-valued potential increase alone is not the termination
+argument. `exists_terminal_reachable` obtains a finite execution from every state;
+terminal states have an acyclic envy graph and incoming strict envy for each proper
+suffix. For positive agent counts, `Terminal.exists_whole` gives a whole-piece
+recipient. `EnvyCycle.exists_terminal_state` supplies fine partitions for every
+positive δ and reachability from the empty suffix assignment;
+`exists_terminal_allocation` exports the corresponding ordinary partial allocation.
+No normalization or positive-value hypotheses or protocol queries are required.
+
+Remaining Section 5 work is the terminal allocation's containment of some candidate
+and the compactness argument that some candidate succeeds. The complete Permute
+search, its whole-piece and indifference guarantees, and total query accounting
+must then be assembled.
 
 ## Checking
 
