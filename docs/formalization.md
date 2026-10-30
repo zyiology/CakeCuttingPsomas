@@ -95,6 +95,9 @@ be constructed in Section 5.
   reachable terminal states, and a whole-piece recipient for nonempty agent sets.
 - `CakeCuttingPsomas/ApproximateSuffix.lean`: terminal approximate envy-free suffix
   allocations with an acyclic envy graph and incoming envy for every proper suffix.
+- `CakeCuttingPsomas/CandidateExtension.lean`: topological agent orders, containment
+  of candidates in terminal suffix allocations, and a δ-envy-free suffix extension
+  of some candidate for every positive δ.
 - `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
   pooled equal-value marks on one traversal, exact coverage and disjointness,
   cell counts and value bounds, and recorded-query accounting.
@@ -570,10 +573,21 @@ positive δ and reachability from the empty suffix assignment;
 `exists_terminal_allocation` exports the corresponding ordinary partial allocation.
 No normalization or positive-value hypotheses or protocol queries are required.
 
-Remaining Section 5 work is the terminal allocation's containment of some candidate
-and the compactness argument that some candidate succeeds. The complete Permute
-search, its whole-piece and indifference guarantees, and total query accounting
-must then be assembled.
+Section 5's terminal candidate-containment milestone is proved.
+`exists_topological_order` orders any acyclic relation on `Fin n` so every edge
+points forward, using Mathlib's well-order extension and finite sorted enumeration.
+`EnvyCycle.State.Terminal.contains_candidate` follows the paper's induction:
+a proper terminal suffix has an earlier envious observer, whose candidate cap
+and induction hypothesis rule out reverse containment by suffix comparability.
+`EnvyCycle.exists_candidate_delta_extension` supplies, for every positive δ,
+orders, a candidate, and a δ-envy-free allocation extending that candidate by
+suffixes with the same input-label assignment. The orders may depend on δ.
+These proof-only results require no nonempty-agent or positive-value assumptions
+and use no protocol queries.
+
+Remaining Section 5 work is the compactness argument that some candidate succeeds.
+The complete Permute search, its whole-piece and indifference guarantees, and
+total query accounting must then be assembled.
 
 ## Checking
 
