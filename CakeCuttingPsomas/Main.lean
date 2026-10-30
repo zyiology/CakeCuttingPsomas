@@ -12,7 +12,7 @@ set_option linter.style.header false
 
 /-! # Target theorem
 
-The initial, normalized unit-cake instance of the main theorem in Section 2.
+The general-input main theorem in Section 2 and its normalized unit-cake instance.
 The conditional theorems construct Divide from Dominate, Dominate from Core and
 Repair, and both Core and Repair from Permute. Section 5's assembled Permute
 closes the unconditional theorem.
@@ -75,6 +75,29 @@ theorem exists_bounded_envy_free_protocol_of_permute
   exists_bounded_envy_free_protocol_of_permute_repair P hP (RepairAssembly.protocol P)
     (RepairAssembly.protocol_correct P hP) n hn
 
+/-- Section 2's main theorem (`thm: main theorem`) under Section 1's inherited-record
+convention: for any compatible ordered cake, one protocol returns a complete
+envy-free allocation within the explicit query bound whenever the supplied records
+are correct. This includes empty cakes and unnormalized or zero valuations.
+The protocol is chosen before the valuations; preparing the inherited records
+is outside this query budget. -/
+theorem exists_bounded_envy_free_protocol_on_piece
+    (n : ℕ) (hn : 0 < n) (s : RecordedState n) (C : Piece) (hC : s.Compatible C) :
+    ∃ protocol : RWProtocol n (Allocation n C),
+      ∀ v : Fin n → Valuation, s.Correct v →
+        ∃ (A : Allocation n C) (count : ℕ),
+          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n := by
+  let K := CoreAssembly.protocol PermuteAssembly.protocol
+  let R := RepairAssembly.protocol PermuteAssembly.protocol
+  have hK : K.Correct :=
+    CoreAssembly.protocol_correct PermuteAssembly.protocol PermuteAssembly.protocol_correct
+  have hR : R.Correct :=
+    RepairAssembly.protocol_correct PermuteAssembly.protocol PermuteAssembly.protocol_correct
+  refine ⟨RWProtocol.divide (DominateAssembly.protocol K R) n hn s C, ?_⟩
+  intro v hs
+  exact RWProtocol.divide_runs_bounded (DominateAssembly.protocol K R)
+    (DominateAssembly.protocol_correct K hK R hR) n hn s C v hs hC
+
 /-- Section 2's main theorem (`thm: main theorem`), using Section 5's
 `alg:permute` and `lem:permute`: for every positive number of agents, one protocol
 works for every profile of normalized nonnegative integrable densities.
@@ -87,9 +110,10 @@ theorem exists_bounded_envy_free_protocol (n : ℕ) (hn : 0 < n) :
     ∃ protocol : RWProtocol n (Allocation n unitCake),
       ∀ v : Fin n → Valuation, (∀ i, (v i).Normalized) →
         ∃ (A : Allocation n unitCake) (count : ℕ),
-          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n :=
-  exists_bounded_envy_free_protocol_of_permute PermuteAssembly.protocol
-    PermuteAssembly.protocol_correct n hn
+          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n := by
+  obtain ⟨protocol, hprotocol⟩ := exists_bounded_envy_free_protocol_on_piece n hn
+    (RecordedState.initial n) unitCake (fun _ h ↦ h)
+  exact ⟨protocol, fun v hv ↦ hprotocol v (RecordedState.correct_initial v hv)⟩
 
 /-- Section 2's main theorem (`thm: main theorem`), asymptotic corollary:
 uniform protocols use `2^{O(n log n)}` queries. The constant and threshold are

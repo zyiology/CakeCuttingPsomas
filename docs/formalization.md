@@ -10,6 +10,11 @@ the whole cake and which form an envy-free allocation. It uses at most
 
 This is the initial normalized unit-cake instance of the main theorem in Section 2.
 `exists_bounded_envy_free_protocol` proves this unconditionally.
+It specializes `exists_bounded_envy_free_protocol_on_piece`, which works on any
+ordered cake compatible with supplied correct inherited records, including empty
+cakes and unnormalized or zero valuations. The protocol is chosen before the
+valuations. The query bound counts the call using those records; it does not
+include preparing the records for an arbitrary starting cake.
 `exists_bounded_envy_free_protocol_of_dominate` proves the same conclusion from
 an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
 Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
@@ -145,7 +150,7 @@ agent count and valuation profile.
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
   Dominate, Core and Repair, Permute and Repair, or Permute alone, and the
-  unconditional main theorem.
+  unconditional general-input and unit-cake main theorems and asymptotic corollary.
 - `CakeCuttingPsomas.lean`: imports the complete development.
 
 `Fin n` represents the agents using indices from zero through `n - 1`.
@@ -635,6 +640,7 @@ and records. No positive-value or normalization hypotheses are added.
 Run `lake build`. The development has no `sorry` placeholders.
 To audit theorem dependencies, import `CakeCuttingPsomas` in a temporary Lean file
 and run `#print axioms` on `CakeCuttingPsomas.PermuteAssembly.protocol_correct`,
+`CakeCuttingPsomas.exists_bounded_envy_free_protocol_on_piece`,
 `CakeCuttingPsomas.exists_bounded_envy_free_protocol`, and
 `CakeCuttingPsomas.exists_asymptotically_bounded_envy_free_protocol` with
 `lake env lean`. These use only `propext`, `Classical.choice`, and `Quot.sound`;
