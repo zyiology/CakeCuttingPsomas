@@ -98,6 +98,9 @@ be constructed in Section 5.
 - `CakeCuttingPsomas/CandidateExtension.lean`: topological agent orders, containment
   of candidates in terminal suffix allocations, and a δ-envy-free suffix extension
   of some candidate for every positive δ.
+- `CakeCuttingPsomas/CandidateCompactness.lean`: compact boxes of suffix extensions,
+  continuous maximum envy, positive minimum extension envy for failed candidates,
+  and existence of an envy-free guess by the paper's compactness argument.
 - `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
   pooled equal-value marks on one traversal, exact coverage and disjointness,
   cell counts and value bounds, and recorded-query accounting.
@@ -585,9 +588,22 @@ suffixes with the same input-label assignment. The orders may depend on δ.
 These proof-only results require no nonempty-agent or positive-value assumptions
 and use no protocol queries.
 
-Remaining Section 5 work is the compactness argument that some candidate succeeds.
-The complete Permute search, its whole-piece and indifference guarantees, and
-total query accounting must then be assembled.
+Section 5's compactness argument is proved.
+`CandidateCompactness.extensionBox` parameterizes extensions by traversal positions
+between zero and the candidate's removed length. The box is nonempty and compact;
+`extension_coordinates` represents every suffix extension in it.
+`continuous_maxEnvy` proves continuity of the finite maximum of pairwise envy,
+using the existing suffix-value continuity. `exists_positive_extension_bound`
+uses `IsCandidate.extension_eq` to exclude envy-free extensions of failed
+candidates and the extreme value theorem to obtain a strictly positive bound.
+`CandidateConstruction.exists_envyFree_guess` takes the minimum over the finite
+set of order pairs and contradicts a δ-envy-free extension with δ half that minimum.
+Support uniqueness identifies the candidate provided by the extension theorem
+with the fixed mathematical candidate for that guess. The result includes empty
+agent sets, and requires no normalization or positive-value assumptions.
+
+Remaining Section 5 work is the complete Permute search, its whole-piece and
+indifference guarantees, and total query accounting.
 
 ## Checking
 

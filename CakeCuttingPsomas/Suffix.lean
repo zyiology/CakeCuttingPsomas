@@ -277,6 +277,19 @@ theorem suffixAt_suffixAt (P : Piece) {a b : ℝ} (ha : a ∈ Set.Icc 0 P.length
         dsimp [R, CakeInterval.length]
         ring
 
+/-- A suffix's traversal position is determined by the length removed. -/
+theorem IsSuffix.position_mem {P Q : Piece} (h : Q.IsSuffix P) :
+    P.length - Q.length ∈ Set.Icc 0 P.length := by
+  obtain ⟨a, ha, rfl⟩ := h
+  rw [length_suffixAt P ha]
+  simpa only [sub_sub_cancel] using ha
+
+/-- The canonical traversal position reconstructs the exact suffix. -/
+theorem IsSuffix.eq_suffixAt_length_sub_length {P Q : Piece} (h : Q.IsSuffix P) :
+    Q = P.suffixAt (P.length - Q.length) := by
+  obtain ⟨a, ha, rfl⟩ := h
+  rw [length_suffixAt P ha, sub_sub_cancel]
+
 theorem IsSuffix.trans {P Q R : Piece} (hRQ : R.IsSuffix Q) (hQP : Q.IsSuffix P) :
     R.IsSuffix P := by
   obtain ⟨a, ha, rfl⟩ := hQP

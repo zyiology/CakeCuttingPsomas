@@ -13,6 +13,7 @@ public import CakeCuttingPsomas.EnvyCycle
 public import CakeCuttingPsomas.EnvyCycleTermination
 public import CakeCuttingPsomas.ApproximateSuffix
 public import CakeCuttingPsomas.CandidateExtension
+public import CakeCuttingPsomas.CandidateCompactness
 public import CakeCuttingPsomas.BaseCases
 public import CakeCuttingPsomas.Core
 public import CakeCuttingPsomas.Permute
