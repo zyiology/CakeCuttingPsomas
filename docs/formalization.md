@@ -20,6 +20,9 @@ conditional on correct Permute. `exists_bounded_envy_free_protocol_of_permute`
 reduces the same target to a correct Permute implementation.
 Section 5's `PermuteAssembly.protocol_correct` supplies that implementation,
 closing the unconditional theorem with the same explicit bound.
+`exists_asymptotically_bounded_envy_free_protocol` derives the paper's
+`2^{O(n log n)}` corollary, with a constant and threshold independent of the
+agent count and valuation profile.
 
 ## Files and definitions
 
@@ -68,7 +71,9 @@ closing the unconditional theorem with the same explicit bound.
 - `CakeCuttingPsomas/BaseCases.lean`: the one- and two-agent branches of `Divide`,
   complete and envy-free on arbitrary input pieces, using zero and at most two queries.
 - `CakeCuttingPsomas/QueryBound.lean`: the domination cost, cumulative recursive
-  cost, and the paper's explicit bound.
+  cost, the paper's explicit bound, and its elementary upper bound `n^(11n)`.
+- `CakeCuttingPsomas/Asymptotics.lean`: logarithmic Big-O and explicit base-two
+  bounds witnessing `queryBound n ∈ 2^{O(n log n)}`.
 - `CakeCuttingPsomas/Dominate.lean`: the domination protocol interface and its
   correctness specification, including records for the recursive residue.
 - `CakeCuttingPsomas/RecordedAllocation.lean`: shared partial-allocation outputs
@@ -488,7 +493,14 @@ executions satisfy all guards. No valuations occur in the construction.
 
 `exists_bounded_envy_free_protocol_of_permute` combines Core and Repair with
 Sections 2--3. Section 5's assembled Permute closes the unconditional theorem.
-The asymptotic bound `2^{O(n log n)}` remains to be derived from the explicit bound.
+The asymptotic bound `2^{O(n log n)}` is proved in `Asymptotics`.
+`queryBound_le_pow` uses `Nat.factorial_le_pow` to bound the explicit count by
+`n^(11n)` for `n ≥ 2`. `log_queryBound_isBigO` gives
+`log(queryBound n) = O(n log n)` at infinity, and `queryBound_le_two_rpow` gives
+the pointwise bound `queryBound n ≤ 2^((11 / log 2) n log n)` using natural logs.
+`exists_asymptotically_bounded_envy_free_protocol` combines this estimate with
+the unconditional protocol theorem, with constant `11 / log 2` and threshold 2.
+The exact-bound theorem still covers every positive agent count.
 
 Section 5's suffix-trimming toolkit is proved. `Piece.suffixAt_suffixAt` adds
 traversal positions with exact piece equality; `IsSuffix.trans` and
@@ -622,7 +634,8 @@ and records. No positive-value or normalization hypotheses are added.
 
 Run `lake build`. The development has no `sorry` placeholders.
 To audit theorem dependencies, import `CakeCuttingPsomas` in a temporary Lean file
-and run `#print axioms CakeCuttingPsomas.PermuteAssembly.protocol_correct` and
-`#print axioms CakeCuttingPsomas.exists_bounded_envy_free_protocol` with
-`lake env lean`. Both use only `propext`, `Classical.choice`, and `Quot.sound`;
-neither depends on `sorryAx` or a project-specific axiom.
+and run `#print axioms` on `CakeCuttingPsomas.PermuteAssembly.protocol_correct`,
+`CakeCuttingPsomas.exists_bounded_envy_free_protocol`, and
+`CakeCuttingPsomas.exists_asymptotically_bounded_envy_free_protocol` with
+`lake env lean`. These use only `propext`, `Classical.choice`, and `Quot.sound`;
+none depends on `sorryAx` or a project-specific axiom.

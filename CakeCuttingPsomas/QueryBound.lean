@@ -95,4 +95,20 @@ theorem divideQueryCost_le_queryBound (n : ℕ) : divideQueryCost n ≤ queryBou
     divideQueryCost n ≤ 2 * dominateQueryBound n := h n
     _ = queryBound n := by simp only [dominateQueryBound, queryBound]; ring
 
+/-- Section 2's main theorem (`thm: main theorem`): an elementary upper bound
+on the explicit query count, used to derive `2^{O(n log n)}`. -/
+theorem queryBound_le_pow {n : ℕ} (hn : 2 ≤ n) :
+    queryBound n ≤ n ^ (11 * n) := by
+  have h32 : 32 ≤ n ^ 5 := by
+    calc
+      32 = 2 ^ 5 := by norm_num
+      _ ≤ n ^ 5 := Nat.pow_le_pow_left hn 5
+  calc
+    queryBound n ≤ n * (n ^ 5) ^ n * n ^ 7 * (n ^ n) ^ 2 := by
+      unfold queryBound
+      gcongr
+      exact Nat.factorial_le_pow n
+    _ = n ^ (7 * n + 8) := by ring
+    _ ≤ n ^ (11 * n) := Nat.pow_le_pow_right (by omega) (by omega)
+
 end CakeCuttingPsomas
