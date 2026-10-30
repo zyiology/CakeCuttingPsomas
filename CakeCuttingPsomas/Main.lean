@@ -4,6 +4,7 @@ public import CakeCuttingPsomas.Divide
 public import CakeCuttingPsomas.DominateProtocol
 public import CakeCuttingPsomas.CoreProtocol
 public import CakeCuttingPsomas.RepairProtocol
+public import CakeCuttingPsomas.PermuteProtocol
 
 -- This project does not prescribe mathlib's copyright/license header format.
 set_option linter.style.header false
@@ -11,9 +12,9 @@ set_option linter.style.header false
 /-! # Target theorem
 
 The initial, normalized unit-cake instance of the main theorem in Section 2.
-The unconditional proof is intentionally unfinished. The conditional theorems
-construct Divide from Dominate, Dominate from Core and Repair, and both Core and
-Repair from Permute.
+The conditional theorems construct Divide from Dominate, Dominate from Core and
+Repair, and both Core and Repair from Permute. Section 5's assembled Permute
+closes the unconditional theorem.
 -/
 
 @[expose] public section
@@ -73,19 +74,20 @@ theorem exists_bounded_envy_free_protocol_of_permute
   exists_bounded_envy_free_protocol_of_permute_repair P hP (RepairAssembly.protocol P)
     (RepairAssembly.protocol_correct P hP) n hn
 
-/-- For every positive number of agents, one protocol works for every profile
-of normalized nonnegative integrable densities. It returns a complete envy-free
-allocation using at most the paper's explicit number of Robertson–Webb queries.
+/-- Section 2's main theorem (`thm: main theorem`), using Section 5's
+`alg:permute` and `lem:permute`: for every positive number of agents, one protocol
+works for every profile of normalized nonnegative integrable densities.
+It returns a complete envy-free allocation using at most the paper's explicit
+number of Robertson–Webb queries.
 
 The protocol is chosen BEFORE the valuations, so it cannot inspect densities
-directly. Its only access to them is through the queries checked by `Runs`.
-
-UNPROVED: `sorry` is a placeholder, not a verified mathematical proof. -/
+directly. Its only access to them is through the queries checked by `Runs`. -/
 theorem exists_bounded_envy_free_protocol (n : ℕ) (hn : 0 < n) :
     ∃ protocol : RWProtocol n (Allocation n unitCake),
       ∀ v : Fin n → Valuation, (∀ i, (v i).Normalized) →
         ∃ (A : Allocation n unitCake) (count : ℕ),
-          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n := by
-  sorry
+          protocol.Runs v A count ∧ A.Complete ∧ A.EnvyFree v ∧ count ≤ queryBound n :=
+  exists_bounded_envy_free_protocol_of_permute PermuteAssembly.protocol
+    PermuteAssembly.protocol_correct n hn
 
 end CakeCuttingPsomas

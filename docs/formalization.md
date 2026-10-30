@@ -9,7 +9,7 @@ the whole cake and which form an envy-free allocation. It uses at most
 `2 * 32^n * n^7 * (n!)^2` queries.
 
 This is the initial normalized unit-cake instance of the main theorem in Section 2.
-The unconditional target's proof is a single `sorry` placeholder.
+`exists_bounded_envy_free_protocol` proves this unconditionally.
 `exists_bounded_envy_free_protocol_of_dominate` proves the same conclusion from
 an explicit `DominateProtocol.Correct` hypothesis, using the paper's `Divide`.
 Section 3's `DominateAssembly.protocol_correct` constructs a correct `Dominate`
@@ -17,8 +17,9 @@ from correct Core and Repair protocols. The resulting
 `exists_bounded_envy_free_protocol_of_core_repair` has the same conclusion and
 query bound. Section 4's Core and Repair constructions satisfy their contracts
 conditional on correct Permute. `exists_bounded_envy_free_protocol_of_permute`
-reduces the same target to a correct Permute implementation, which remains to
-be constructed in Section 5.
+reduces the same target to a correct Permute implementation.
+Section 5's `PermuteAssembly.protocol_correct` supplies that implementation,
+closing the unconditional theorem with the same explicit bound.
 
 ## Files and definitions
 
@@ -79,6 +80,8 @@ be constructed in Section 5.
   residue contraction lemma.
 - `CakeCuttingPsomas/Permute.lean`: the Permute contract, including suffix
   assignment, a whole-piece recipient, the indifference property, and query cost.
+- `CakeCuttingPsomas/PermuteProtocol.lean`: Section 5's finite recorded candidate
+  search, complete Permute correctness, and total query accounting.
 - `CakeCuttingPsomas/EqualPartition.lean`: recorded equal partitioning with
   exact coverage, disjointness, equal cutter values, and at most `n-1` prefix cuts.
 - `CakeCuttingPsomas/CoreProtocol.lean`: Section 4's Core construction and its
@@ -137,7 +140,7 @@ be constructed in Section 5.
   and query bound, conditional on a correct domination protocol.
 - `CakeCuttingPsomas/Main.lean`: normalized unit-cake theorems conditional on
   Dominate, Core and Repair, Permute and Repair, or Permute alone, and the
-  unproved target.
+  unconditional main theorem.
 - `CakeCuttingPsomas.lean`: imports the complete development.
 
 `Fin n` represents the agents using indices from zero through `n - 1`.
@@ -169,7 +172,7 @@ rather than an arbitrary number attached to an allocation. The model permits
 arbitrary internal computation on exact real answers, as an abstract query model;
 it does not provide an executable implementation.
 
-## Next proof work
+## Proof status
 
 Basic support measurability and valuation properties are established.
 `Allocation.combine X Y hY` appends each agent's interval lists, where
@@ -483,10 +486,9 @@ estimates give at most `n/ε + n³(n!)²` queries without rounding the real budg
 Geometric guards provide unchanged outputs on invalid answer branches; valid
 executions satisfy all guards. No valuations occur in the construction.
 
-`exists_bounded_envy_free_protocol_of_permute` now combines Core and Repair with
-Sections 2--3, leaving only Section 5's Permute construction and correctness proof
-for the unconditional theorem. The asymptotic bound `2^{O(n log n)}` also remains
-to be derived from the explicit bound.
+`exists_bounded_envy_free_protocol_of_permute` combines Core and Repair with
+Sections 2--3. Section 5's assembled Permute closes the unconditional theorem.
+The asymptotic bound `2^{O(n log n)}` remains to be derived from the explicit bound.
 
 Section 5's suffix-trimming toolkit is proved. `Piece.suffixAt_suffixAt` adds
 traversal positions with exact piece equality; `IsSuffix.trans` and
@@ -602,11 +604,25 @@ Support uniqueness identifies the candidate provided by the extension theorem
 with the fixed mathematical candidate for that guess. The result includes empty
 agent sets, and requires no normalization or positive-value assumptions.
 
-Remaining Section 5 work is the complete Permute search, its whole-piece and
-indifference guarantees, and total query accounting.
+Section 5's complete Permute assembly is proved.
+`PermuteAssembly.guesses` enumerates all `(n!)²` pairs of orders.
+`search` runs candidates sequentially on the original input pieces, retaining
+record refinements after failures; `passes` tests envy-freeness using only stored
+values. `search_correct` combines successful-guess existence with candidate support
+uniqueness to exclude exhaustion and bound the total query count.
+`CandidateConstruction.runs_last_trim` exposes the last actual trim's equality
+witness, and `Valid.indifference` uses the earliest member of a nonempty set of
+proper-suffix recipients to obtain an indifferent observer outside the set.
+`PermuteAssembly.protocol_correct` proves the full contract, including a whole-piece
+recipient, exact recorded residue, inherited records, and at most
+`(n+1) * n.choose 2 * (n!)²` queries. The protocol's guards depend only on geometry
+and records. No positive-value or normalization hypotheses are added.
 
 ## Checking
 
-Run `lake build`. A warning that the target uses `sorry` is expected at this
-stage. The conditional reduction and supporting results are proved; successful
-compilation does not establish the unconditional target while its placeholder remains.
+Run `lake build`. The development has no `sorry` placeholders.
+To audit theorem dependencies, import `CakeCuttingPsomas` in a temporary Lean file
+and run `#print axioms CakeCuttingPsomas.PermuteAssembly.protocol_correct` and
+`#print axioms CakeCuttingPsomas.exists_bounded_envy_free_protocol` with
+`lake env lean`. Both use only `propext`, `Classical.choice`, and `Quot.sound`;
+neither depends on `sorryAx` or a project-specific axiom.

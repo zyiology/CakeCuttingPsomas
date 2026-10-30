@@ -17,6 +17,7 @@ public import CakeCuttingPsomas.CandidateCompactness
 public import CakeCuttingPsomas.BaseCases
 public import CakeCuttingPsomas.Core
 public import CakeCuttingPsomas.Permute
+public import CakeCuttingPsomas.PermuteProtocol
 public import CakeCuttingPsomas.EqualPartition
 public import CakeCuttingPsomas.CoreProtocol
 public import CakeCuttingPsomas.Repair

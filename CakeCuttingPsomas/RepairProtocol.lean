@@ -22,10 +22,7 @@ namespace RecordedState
 theorem represents_allocated {n : ℕ} {C : Piece} {s : RecordedState n}
     (D : Allocation n C) (hD : ∀ i, s.Represents (D.bundle i).support) :
     s.Represents D.allocated := by
-  have h := RepairRoundRobin.join_represents s D.bundle D.disjoint hD
-    (List.ofFn id) (List.nodup_ofFn.mpr Function.injective_id)
-  rw [(RepairRoundRobin.join _ _ _ _).support_eq] at h
-  simpa [Allocation.allocated] using h
+  exact s.represents_iUnion D.bundle hD D.disjoint
 
 end RecordedState
 

@@ -219,6 +219,25 @@ theorem runs_spec {n : ℕ} (agents pieces : Equiv.Perm (Fin n))
   obtain ⟨rfl, rfl⟩ := hr.unique hr'
   exact ⟨hc, hrs, href, halign, hcandidate⟩
 
+/-- Section 5, proof of `lem:permute` (ii): every proper candidate suffix has
+an earlier observer indifferent between it and that observer's final bundle.
+The witness is supplied by the last actual trim. -/
+theorem runs_last_trim {n : ℕ} (agents pieces : Equiv.Perm (Fin n))
+    (inputs : Fin n → Piece) {s : RecordedState n} {v : Fin n → Valuation}
+    (hs : s.Correct v)
+    (hinputs : ∀ j, ∃ Q, s.Compatible Q ∧ (inputs j).SameTraversal Q)
+    {r : Result n} {count : ℕ} (hr : (run agents pieces inputs s).Runs v r count)
+    (j : Fin n) (hne : (r.bundles j).support ≠ (inputs (pieces j)).support) :
+    ∃ i : Fin n, i < j ∧
+      (v (agents i)).value (r.bundles j).support =
+        (v (agents i)).value (r.bundles i).support := by
+  obtain ⟨r', count', hr', _, _, _, _, hseq⟩ :=
+    build_correct agents (inputs ∘ pieces) n le_rfl s v hs (fun j ↦ hinputs (pieces j))
+  obtain ⟨rfl, rfl⟩ := hr.unique hr'
+  obtain ⟨vc, hvc, he⟩ := (hseq j j.isLt).last_trim_value hne
+  obtain ⟨i, hi, rfl⟩ := List.mem_map.mp hvc
+  exact ⟨i, (mem_positions j.val i).mp hi, he⟩
+
 /-- Section 5, `eq:permute-caps`: the protocol realizes the mathematical
 candidate, independent of how its input traversals are represented in records. -/
 theorem runs_candidate_support {n : ℕ} (agents pieces : Equiv.Perm (Fin n))

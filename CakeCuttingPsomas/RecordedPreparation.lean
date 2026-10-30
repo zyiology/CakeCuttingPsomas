@@ -77,6 +77,25 @@ theorem Refines.represents {n : ℕ} {s s' : RecordedState n} (h : s.Refines s')
   obtain ⟨P, hP, rfl⟩ := hS
   exact h P hP
 
+/-- Section 1.3: a finite disjoint union of represented supports is represented. -/
+theorem represents_iUnion {n : ℕ} {s : RecordedState n} {ι : Type*} [Finite ι]
+    (P : ι → Piece) (hP : ∀ i, s.Represents (P i).support)
+    (hd : ∀ i j, i ≠ j → Disjoint (P i).support (P j).support) :
+    s.Represents (⋃ i, (P i).support) := by
+  classical
+  let := Fintype.ofFinite ι
+  have h : ∀ t : Finset ι, s.Represents (⋃ i ∈ t, (P i).support) := by
+    intro t
+    induction t using Finset.induction_on with
+    | empty => simpa using s.represents_empty
+    | @insert i t hi ih =>
+      rw [Finset.set_biUnion_insert]
+      apply (hP i).union ih
+      simp only [Set.disjoint_iUnion_right]
+      intro j hj
+      exact hd i j (fun he ↦ hi (he ▸ hj))
+  simpa using h Finset.univ
+
 end RecordedState
 
 namespace Allocation
