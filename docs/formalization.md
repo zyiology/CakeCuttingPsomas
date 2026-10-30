@@ -83,6 +83,11 @@ be constructed in Section 5.
   exact coverage, disjointness, equal cutter values, and at most `n-1` prefix cuts.
 - `CakeCuttingPsomas/CoreProtocol.lean`: Section 4's Core construction and its
   full correctness contract, conditional only on correct Permute.
+- `CakeCuttingPsomas/TraversalPartition.lean`: shared mathematical pooled-mark
+  geometry, exact consecutive cells, and equal-share value bounds.
+- `CakeCuttingPsomas/FineCells.lean`: proof-only finite consecutive partitions
+  with an absolute cell-value bound for all agents, including empty pieces and
+  unnormalized or zero valuations; boundary suffixes and preceding-cell enlargement.
 - `CakeCuttingPsomas/RepairPartition.lean`: Repair’s common residue partition,
   pooled equal-value marks on one traversal, exact coverage and disjointness,
   cell counts and value bounds, and recorded-query accounting.
@@ -524,6 +529,18 @@ record states admitting the input traversals, even when the input interval lists
 are subdivided. `RWProtocol.Runs.unique` supplies result and query-count uniqueness
 from the model's unique legal answers. No nonempty-piece, positive-value, or
 normalization assumptions are used.
+
+Section 5's proof-only discretization is proved in `FineCells.exists_partition`
+and `exists_partitions`. `CellPartition` stores finitely many interior traversal
+marks; its cells have exact coverage, pairwise disjointness, and nonempty supports.
+Empty pieces have no cells. For observer value `A`, subdivision uses
+`max 1 ⌈A/δ⌉₊` shares, so each pooled cell is worth at most `δ` without
+normalization. Zero-valued observers contribute no marks; nonempty pieces worth
+zero to everyone remain whole. `exists_preceding`, `cell_union_suffix`, and
+`value_suffix_step` support adjoining the immediately preceding cell to a boundary
+suffix. The mathematical construction has no recorded-state or protocol inputs
+and contributes no Permute queries. Repair reuses the extracted pooled-mark
+geometry through its existing public names.
 
 Remaining Section 5 work is the proof-only approximate envy-free suffix
 construction, its containment of some candidate, and the compactness argument
