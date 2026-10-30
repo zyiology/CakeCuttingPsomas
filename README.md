@@ -2,7 +2,9 @@
 
 A Lean formalization of Alexandros Psomas's
 *Cutting a Cake For Human Consumption: An Elementary n-agent Cake Cutting Protocol*.
-The original TeX source is in [paper/main.tex](paper/main.tex).
+The original TeX source is in [paper/main.tex](paper/main.tex), taken from https://arxiv.org/abs/2610.30370
+
+Disclaimer: This entire process was handled by Codex using GPT-6.1-Sol medium, I have not verified the results. I just wanted to see what the process looks like, and seems like Codex handled everything pretty smoothly. I just asked it to break down each section into a set of milestones, and implemented each milestone in a fresh conversation, until all the sections were done. Sharing since all the tokens have already been spent on this.
 
 The normalized unit-cake main theorem and its asymptotic corollary are proved:
 for every positive number `n` of agents, one Robertson–Webb protocol returns a
